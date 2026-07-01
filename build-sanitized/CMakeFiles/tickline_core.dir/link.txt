@@ -1,0 +1,2 @@
+/usr/bin/ar qc libtickline_core.a CMakeFiles/tickline_core.dir/cpp/src/version.cpp.o
+/usr/bin/ranlib libtickline_core.a

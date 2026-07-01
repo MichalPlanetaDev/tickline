@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/skillu/dev/tickline/build-sanitized/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

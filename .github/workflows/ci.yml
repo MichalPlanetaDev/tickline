@@ -1,0 +1,79 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    name: docs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check documentation
+        run: bash scripts/check-docs.sh
+
+  cpp:
+    name: cpp
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  sanitizers:
+    name: sanitizers
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure with sanitizers
+        run: cmake -S . -B build-sanitized -DCMAKE_BUILD_TYPE=Debug -DTICKLINE_ENABLE_SANITIZERS=ON
+
+      - name: Build with sanitizers
+        run: cmake --build build-sanitized --parallel
+
+      - name: Test with sanitizers
+        run: ctest --test-dir build-sanitized --output-on-failure
+
+  python:
+    name: python
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test Python tools
+        run: PYTHONPATH=tools/python python3 -m unittest discover -s tools/python/tests -v
+
+  docker:
+    name: docker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker smoke image
+        run: docker build -f infra/docker/Dockerfile .

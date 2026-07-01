@@ -1,0 +1,5 @@
+/home/skillu/dev/tickline/build-sanitized/CMakeFiles/tickline_core.dir
+/home/skillu/dev/tickline/build-sanitized/CMakeFiles/tickline_version_tests.dir
+/home/skillu/dev/tickline/build-sanitized/CMakeFiles/test.dir
+/home/skillu/dev/tickline/build-sanitized/CMakeFiles/edit_cache.dir
+/home/skillu/dev/tickline/build-sanitized/CMakeFiles/rebuild_cache.dir
