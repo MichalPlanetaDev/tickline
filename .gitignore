@@ -1,0 +1,70 @@
+# Build outputs
+build/
+cmake-build-*/
+out/
+dist/
+bin/
+obj/
+
+# C/C++ artifacts
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dll
+*.dylib
+*.exe
+*.pdb
+*.ilk
+*.gcda
+*.gcno
+compile_commands.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Unity generated files
+unity-viewer/Library/
+unity-viewer/Temp/
+unity-viewer/Obj/
+unity-viewer/Build/
+unity-viewer/Builds/
+unity-viewer/Logs/
+unity-viewer/UserSettings/
+unity-viewer/*.csproj
+unity-viewer/*.sln
+
+# Local runtime artifacts
+samples/*.jsonl
+evidence/*.json
+evidence/*.csv
+reports/*.db
+reports/*.sqlite
+reports/*.sqlite3
+reports/*.json
+reports/*.csv
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
