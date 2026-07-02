@@ -16,12 +16,12 @@ struct Version {
 {
     return Version{
         .major = 0,
-        .minor = 1,
+        .minor = 2,
         .patch = 0,
-        .channel = "blueprint",
+        .channel = "",
     };
 }
 
 [[nodiscard]] std::string version_string();
 
-} // namespace tickline
+}

@@ -11,10 +11,13 @@ std::string version_string()
     std::ostringstream output;
     output << version.major << '.'
            << version.minor << '.'
-           << version.patch << '-'
-           << version.channel;
+           << version.patch;
+
+    if (!version.channel.empty()) {
+        output << '-' << version.channel;
+    }
 
     return output.str();
 }
 
-} // namespace tickline
+}

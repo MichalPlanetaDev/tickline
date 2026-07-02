@@ -1,5 +1,55 @@
 # Changelog
 
+## v0.2.0 - Deterministic simulation core
+
+Introduces the deterministic C++23 reference simulation used by later protocol, validation, replay, and concurrency work.
+
+Added:
+
+- explicit integer units for time, position, and velocity
+- non-zero entity identifiers with stable ordering
+- validated fixed-step simulation clock
+- authoritative entity state
+- deterministic velocity-command scheduling
+- sequence and target-tick validation
+- bounded position and velocity policies
+- fractional displacement preservation
+- transactional world advancement
+- stable entity snapshots
+- canonical big-endian world-state encoding
+- versioned canonical-state schema
+- deterministic 64-bit state fingerprints
+- deterministic simulation contract documentation
+
+Verification covers:
+
+- unit conversion boundaries
+- invalid clock and world configuration
+- entity admission and duplicate rejection
+- stale, regressing, and invalid commands
+- fractional displacement
+- scheduled command execution
+- stable entity ordering
+- insertion-order independence
+- failed-advance state preservation
+- exact canonical byte layout
+- pending-command state encoding
+- stable replay fingerprints
+- standard and sanitizer builds
+
+The state fingerprint uses FNV-1a only for deterministic comparison. It is not a cryptographic evidence mechanism.
+
+Not included:
+
+- networking
+- protocol parsing
+- collision or hit validation
+- rollback or lag compensation
+- multithreaded simulation
+- cryptographic evidence hashing
+- Unity replay visualization
+- analytics
+
 ## v0.1.1 - Local workflow automation
 
 Added a project-local quality gate so the common verification path no longer depends on copied manual command chains.
