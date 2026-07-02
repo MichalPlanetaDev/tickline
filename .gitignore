@@ -68,3 +68,6 @@ Thumbs.db
 *.key
 *.p12
 *.pfx
+
+# CMake build trees
+build-*/
