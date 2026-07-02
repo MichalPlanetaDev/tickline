@@ -206,6 +206,34 @@ Add protocol parser malformed-input tests
 Add hash-chain evidence verification
 ```
 
+## Local workflow
+
+The main local verification command is:
+
+    bash scripts/check-local.sh
+
+It runs the same baseline checks expected from the early project:
+
+- documentation sanity check
+- CMake configure
+- C++ build
+- CTest
+- sanitizer build
+- Python unittest discovery
+- Docker smoke image build
+
+For a faster local pass during small edits:
+
+    SKIP_SANITIZERS=1 SKIP_DOCKER=1 bash scripts/check-local.sh
+
+If `just` is installed, the same workflow is available as:
+
+    just check
+    just check-fast
+    just clean
+
+The script is the source of truth. Long manual command chains should not be copied around unless a failure is being isolated.
+
 ## Quality gates
 
 The final project should include quality gates for:

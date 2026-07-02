@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.1.1 - Local workflow automation
+
+Added a project-local quality gate so the common verification path no longer depends on copied manual command chains.
+
+Added:
+
+- `scripts/check-local.sh`
+- `scripts/clean.sh`
+- `justfile`
+- README local workflow section
+
+The local quality gate runs documentation checks, CMake configure/build, CTest, sanitizer build, Python unittest discovery, and Docker smoke image build.
+
+No runtime simulation, protocol parser, evidence writer, Unity viewer, or analytics engine was added in this patch release.
+
 ## v0.1.0 - Blueprint and engineering skeleton
 
 Initial Tickline release.
