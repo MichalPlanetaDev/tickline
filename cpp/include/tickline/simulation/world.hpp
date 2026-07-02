@@ -95,6 +95,9 @@ private:
     [[nodiscard]] bool velocity_is_valid(
         const Velocity2& velocity) const noexcept;
 
+    friend std::vector<std::byte> encode_world_state(
+        const World& world);
+
     FixedStepClock clock_;
     WorldLimits limits_;
     std::map<EntityId, StoredEntity> entities_;
