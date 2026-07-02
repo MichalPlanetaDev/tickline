@@ -32,27 +32,13 @@ Tickline is designed to make that chain visible.
 
 ## Current status
 
-```text
-v0.1.0 — Blueprint and engineering skeleton
-```
+Current development release:
 
-Current milestone scope:
+**v0.2.0 — Deterministic simulation core**
 
-```text
-repository structure
-GitHub labels
-GitHub milestone
-scoped GitHub issues
-project identity
-architecture documentation
-threat model
-protocol specification
-evidence-integrity specification
-CI skeleton
-release discipline
-```
+The C++ core now provides fixed-duration ticks, integer simulation units, stable entity ordering, scheduled velocity commands, bounded integration, replayable state, canonical serialization, and deterministic state fingerprints.
 
-Runtime implementation begins after the blueprint is defined. That is intentional. Tickline starts with architecture, constraints, and proof targets before implementation.
+Networking, protocol parsing, evidence writing, cryptographic integrity, Unity visualization, and analytics remain outside this release.
 
 ## What Tickline is meant to prove
 
@@ -279,6 +265,7 @@ Planned documentation:
 | Document | Purpose |
 |---|---|
 | `docs/architecture.md` | System design, component boundaries, data flow, trust boundaries |
+| `docs/simulation-model.md` | Deterministic units, tick behavior, command ordering, canonical state, and failure guarantees |
 | `docs/threat-model.md` | Assets, attackers, abuse cases, prohibited scope, defensive constraints |
 | `docs/protocol.md` | Framing, message format, parser behavior, versioning, malformed input handling |
 | `docs/evidence-integrity.md` | Hash chain, artifact signing, tamper detection, evidence limitations |
