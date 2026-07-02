@@ -266,6 +266,8 @@ Planned documentation:
 |---|---|
 | `docs/architecture.md` | System design, component boundaries, data flow, trust boundaries |
 | `docs/simulation-model.md` | Deterministic units, tick behavior, command ordering, canonical state, and failure guarantees |
+| `docs/developer-console.md` | Developer-console task model, execution boundaries, output contracts, and terminal policy |
+| `docs/decisions/0001-go-developer-console.md` | Decision to use Go and Bubble Tea over a shared check execution model |
 | `docs/threat-model.md` | Assets, attackers, abuse cases, prohibited scope, defensive constraints |
 | `docs/protocol.md` | Framing, message format, parser behavior, versioning, malformed input handling |
 | `docs/evidence-integrity.md` | Hash chain, artifact signing, tamper detection, evidence limitations |
