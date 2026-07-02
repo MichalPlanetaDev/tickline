@@ -11,6 +11,12 @@ Added:
 - `justfile`
 - README local workflow section
 
+Fixed:
+
+- updated `actions/checkout` to the supported Node runtime
+- removed an accidentally tracked sanitized CMake build cache
+- ignored `build-*` directories so host-generated CMake state cannot enter CI checkouts
+
 The local quality gate runs documentation checks, CMake configure/build, CTest, sanitizer build, Python unittest discovery, and Docker smoke image build.
 
 No runtime simulation, protocol parser, evidence writer, Unity viewer, or analytics engine was added in this patch release.
