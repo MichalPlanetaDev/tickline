@@ -12,6 +12,7 @@ required_files=(
   "docs/github-workflow.md"
   "docs/debugging-workflow.md"
   "docs/release-process.md"
+  "docs/simulation-model.md"
 )
 
 for file in "${required_files[@]}"; do
