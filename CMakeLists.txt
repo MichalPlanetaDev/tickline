@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 
 project(
     Tickline
-    VERSION 0.1.0
+    VERSION 0.1.1
     DESCRIPTION "Deterministic security-engineering range"
     LANGUAGES CXX
 )
@@ -58,6 +58,7 @@ endif()
 
 add_library(
     tickline_core
+    cpp/src/simulation/world.cpp
     cpp/src/version.cpp
 )
 
@@ -111,4 +112,22 @@ target_link_libraries(
 add_test(
     NAME tickline_simulation_units_tests
     COMMAND tickline_simulation_units_tests
+)
+
+add_executable(
+    tickline_world_tests
+    cpp/tests/world_tests.cpp
+)
+
+target_link_libraries(
+    tickline_world_tests
+    PRIVATE
+        tickline_core
+        tickline_project_options
+        tickline_project_warnings
+)
+
+add_test(
+    NAME tickline_world_tests
+    COMMAND tickline_world_tests
 )
