@@ -17,8 +17,9 @@ const (
 )
 
 type Dependencies struct {
-	Stdout io.Writer
-	Stderr io.Writer
+	Stdout           io.Writer
+	Stderr           io.Writer
+	WorkingDirectory string
 }
 
 func Run(args []string, dependencies Dependencies) int {
@@ -37,7 +38,11 @@ func Run(args []string, dependencies Dependencies) int {
 		return ExitSuccess
 
 	case "version", "-v", "--version":
-		fmt.Fprintf(dependencies.Stdout, "tickline-dev %s\n", version.Current)
+		fmt.Fprintf(
+			dependencies.Stdout,
+			"tickline-dev %s\n",
+			version.Current,
+		)
 		return ExitSuccess
 
 	case "check":
@@ -54,24 +59,6 @@ func Run(args []string, dependencies Dependencies) int {
 	}
 }
 
-func runCheck(args []string, dependencies Dependencies) int {
-	if len(args) != 0 {
-		fmt.Fprintf(
-			dependencies.Stderr,
-			"check does not accept arguments yet: %s\n",
-			args[0],
-		)
-		return ExitInvalidUsage
-	}
-
-	fmt.Fprintln(
-		dependencies.Stdout,
-		"check execution is not implemented yet",
-	)
-
-	return ExitSuccess
-}
-
 func printHelp(output io.Writer) {
 	_, _ = fmt.Fprintln(output, `Tickline developer console
 
@@ -79,11 +66,15 @@ Usage:
   tickline-dev <command>
 
 Commands:
-  check       Run project verification
+  check       Validate and display the verification execution plan
   version     Print the developer-console version
   help        Show this help
 
-Options:
+Check options:
+  --only <ids>    Select comma-separated stages
+  --skip <ids>    Skip comma-separated stages
+
+Global options:
   -h, --help       Show help
   -v, --version    Print the version`)
 }
