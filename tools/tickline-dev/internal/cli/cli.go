@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"io"
 
@@ -17,14 +17,20 @@ const (
 )
 
 type Dependencies struct {
+	Context          context.Context
 	Stdout           io.Writer
 	Stderr           io.Writer
 	WorkingDirectory string
 }
 
 func Run(args []string, dependencies Dependencies) int {
-	if dependencies.Stdout == nil || dependencies.Stderr == nil {
+	if dependencies.Stdout == nil ||
+		dependencies.Stderr == nil {
 		return ExitInternalError
+	}
+
+	if dependencies.Context == nil {
+		dependencies.Context = context.Background()
 	}
 
 	if len(args) == 0 {
@@ -43,6 +49,7 @@ func Run(args []string, dependencies Dependencies) int {
 			"tickline-dev %s\n",
 			version.Current,
 		)
+
 		return ExitSuccess
 
 	case "check":
@@ -54,7 +61,9 @@ func Run(args []string, dependencies Dependencies) int {
 			"unknown command: %s\n\n",
 			args[0],
 		)
+
 		printHelp(dependencies.Stderr)
+
 		return ExitInvalidUsage
 	}
 }
@@ -66,11 +75,12 @@ Usage:
   tickline-dev <command>
 
 Commands:
-  check       Validate and display the verification execution plan
+  check       Run project verification
   version     Print the developer-console version
   help        Show this help
 
 Check options:
+  --plan          Validate and display the execution plan
   --only <ids>    Select comma-separated stages
   --skip <ids>    Skip comma-separated stages
 
@@ -78,5 +88,3 @@ Global options:
   -h, --help       Show help
   -v, --version    Print the version`)
 }
-
-var ErrInterrupted = errors.New("execution interrupted")

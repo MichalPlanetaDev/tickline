@@ -78,7 +78,11 @@ func TestUnknownCommand(t *testing.T) {
 }
 
 func TestCheckRejectsUnsupportedArguments(t *testing.T) {
-	exitCode, stdout, stderr := runCommand(t, "check", "--invalid")
+	exitCode, stdout, stderr := runCommand(
+		t,
+		"check",
+		"--invalid",
+	)
 
 	if exitCode != cli.ExitInvalidUsage {
 		t.Fatalf(
@@ -89,11 +93,20 @@ func TestCheckRejectsUnsupportedArguments(t *testing.T) {
 	}
 
 	if stdout != "" {
-		t.Fatalf("expected empty stdout, got %q", stdout)
+		t.Fatalf(
+			"expected empty stdout, got %q",
+			stdout,
+		)
 	}
 
-	if !strings.Contains(stderr, "does not accept arguments yet") {
-		t.Fatalf("unexpected stderr: %q", stderr)
+	if !strings.Contains(
+		stderr,
+		"flag provided but not defined: -invalid",
+	) {
+		t.Fatalf(
+			"unexpected stderr: %q",
+			stderr,
+		)
 	}
 }
 

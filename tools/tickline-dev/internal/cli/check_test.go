@@ -17,20 +17,30 @@ func TestCheckPrintsDefaultExecutionPlan(t *testing.T) {
 	var stderr bytes.Buffer
 
 	exitCode := cli.Run(
-		[]string{"check"},
+		[]string{"check", "--plan"},
 		cli.Dependencies{
-			Stdout:           &stdout,
-			Stderr:           &stderr,
-			WorkingDirectory: filepath.Join(root, "tools", "tickline-dev"),
+			Stdout: &stdout,
+			Stderr: &stderr,
+			WorkingDirectory: filepath.Join(
+				root,
+				"tools",
+				"tickline-dev",
+			),
 		},
 	)
 
 	if exitCode != cli.ExitSuccess {
-		t.Fatalf("expected success, got exit code %d", exitCode)
+		t.Fatalf(
+			"expected success, got exit code %d",
+			exitCode,
+		)
 	}
 
 	if stderr.String() != "" {
-		t.Fatalf("expected empty stderr, got %q", stderr.String())
+		t.Fatalf(
+			"expected empty stderr, got %q",
+			stderr.String(),
+		)
 	}
 
 	output := stdout.String()
@@ -52,6 +62,55 @@ func TestCheckPrintsDefaultExecutionPlan(t *testing.T) {
 	}
 }
 
+func TestCheckExecutesSelectedStage(t *testing.T) {
+	root := createCheckRepository(t)
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	exitCode := cli.Run(
+		[]string{"check", "--only", "docs"},
+		cli.Dependencies{
+			Stdout:           &stdout,
+			Stderr:           &stderr,
+			WorkingDirectory: root,
+		},
+	)
+
+	if exitCode != cli.ExitSuccess {
+		t.Fatalf(
+			"expected success, got %d: %s",
+			exitCode,
+			stderr.String(),
+		)
+	}
+
+	if stderr.String() != "" {
+		t.Fatalf(
+			"expected empty stderr, got %q",
+			stderr.String(),
+		)
+	}
+
+	output := stdout.String()
+
+	for _, expected := range []string{
+		"Tickline local verification",
+		"[1/1] Documentation",
+		"documentation fixture",
+		"Result: passed",
+		"1 passed",
+	} {
+		if !strings.Contains(output, expected) {
+			t.Fatalf(
+				"expected output to contain %q, got %q",
+				expected,
+				output,
+			)
+		}
+	}
+}
+
 func TestCheckOnlyIncludesRequiredDependencies(t *testing.T) {
 	root := createCheckRepository(t)
 
@@ -59,7 +118,12 @@ func TestCheckOnlyIncludesRequiredDependencies(t *testing.T) {
 	var stderr bytes.Buffer
 
 	exitCode := cli.Run(
-		[]string{"check", "--only", "docker"},
+		[]string{
+			"check",
+			"--plan",
+			"--only",
+			"docker",
+		},
 		cli.Dependencies{
 			Stdout:           &stdout,
 			Stderr:           &stderr,
@@ -81,12 +145,21 @@ func TestCheckOnlyIncludesRequiredDependencies(t *testing.T) {
 	cppIndex := strings.Index(output, "cpp")
 	dockerIndex := strings.Index(output, "docker")
 
-	if docsIndex < 0 || cppIndex < 0 || dockerIndex < 0 {
-		t.Fatalf("expected dependency chain in output: %q", output)
+	if docsIndex < 0 ||
+		cppIndex < 0 ||
+		dockerIndex < 0 {
+		t.Fatalf(
+			"expected dependency chain in output: %q",
+			output,
+		)
 	}
 
-	if !(docsIndex < cppIndex && cppIndex < dockerIndex) {
-		t.Fatalf("unexpected execution order: %q", output)
+	if !(docsIndex < cppIndex &&
+		cppIndex < dockerIndex) {
+		t.Fatalf(
+			"unexpected execution order: %q",
+			output,
+		)
 	}
 }
 
@@ -97,7 +170,12 @@ func TestCheckRejectsUnknownStage(t *testing.T) {
 	var stderr bytes.Buffer
 
 	exitCode := cli.Run(
-		[]string{"check", "--only", "missing"},
+		[]string{
+			"check",
+			"--plan",
+			"--only",
+			"missing",
+		},
 		cli.Dependencies{
 			Stdout:           &stdout,
 			Stderr:           &stderr,
@@ -112,8 +190,78 @@ func TestCheckRejectsUnknownStage(t *testing.T) {
 		)
 	}
 
-	if !strings.Contains(stderr.String(), "unknown stage") {
-		t.Fatalf("unexpected stderr: %q", stderr.String())
+	if !strings.Contains(
+		stderr.String(),
+		"unknown stage",
+	) {
+		t.Fatalf(
+			"unexpected stderr: %q",
+			stderr.String(),
+		)
+	}
+}
+
+func TestCheckMapsStageFailureToExitCodeOne(
+	t *testing.T,
+) {
+	root := createCheckRepository(t)
+
+	writeFixtureFile(
+		t,
+		filepath.Join(
+			root,
+			"scripts",
+			"checks",
+			"cpp.sh",
+		),
+		"#!/usr/bin/env bash\n"+
+			"set -Eeuo pipefail\n"+
+			"printf 'compiler failure\\n' >&2\n"+
+			"exit 7\n",
+		0o755,
+	)
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	exitCode := cli.Run(
+		[]string{
+			"check",
+			"--only",
+			"cpp",
+		},
+		cli.Dependencies{
+			Stdout:           &stdout,
+			Stderr:           &stderr,
+			WorkingDirectory: root,
+		},
+	)
+
+	if exitCode != cli.ExitCheckFailed {
+		t.Fatalf(
+			"expected check failure exit code, got %d",
+			exitCode,
+		)
+	}
+
+	if !strings.Contains(
+		stderr.String(),
+		"compiler failure",
+	) {
+		t.Fatalf(
+			"expected stage stderr, got %q",
+			stderr.String(),
+		)
+	}
+
+	if !strings.Contains(
+		stdout.String(),
+		"Result: failed",
+	) {
+		t.Fatalf(
+			"expected failed summary, got %q",
+			stdout.String(),
+		)
 	}
 }
 
@@ -131,37 +279,80 @@ func createCheckRepository(t *testing.T) string {
 
 	writeFixtureFile(
 		t,
-		filepath.Join(root, "tools", "tickline-dev", "go.mod"),
+		filepath.Join(
+			root,
+			"tools",
+			"tickline-dev",
+			"go.mod",
+		),
 		"module example.test/tickline-dev\n",
 		0o644,
 	)
 
-	scripts := []string{
-		"docs.sh",
-		"cpp.sh",
-		"docker.sh",
-	}
-
-	for _, script := range scripts {
-		writeFixtureFile(
-			t,
-			filepath.Join(root, "scripts", "checks", script),
-			"#!/usr/bin/env bash\nexit 0\n",
-			0o755,
-		)
-	}
-
-	manifest := strings.Join([]string{
-		"version\t1",
-		"stage\tdocs\tDocumentation\tscripts/checks/docs.sh\ttrue\t",
-		"stage\tcpp\tC++\tscripts/checks/cpp.sh\ttrue\tdocs",
-		"stage\tdocker\tDocker\tscripts/checks/docker.sh\ttrue\tcpp",
-		"",
-	}, "\n")
+	writeFixtureFile(
+		t,
+		filepath.Join(
+			root,
+			"scripts",
+			"checks",
+			"docs.sh",
+		),
+		"#!/usr/bin/env bash\n"+
+			"set -Eeuo pipefail\n"+
+			"printf 'documentation fixture\\n'\n",
+		0o755,
+	)
 
 	writeFixtureFile(
 		t,
-		filepath.Join(root, "scripts", "checks", "manifest.tsv"),
+		filepath.Join(
+			root,
+			"scripts",
+			"checks",
+			"cpp.sh",
+		),
+		"#!/usr/bin/env bash\n"+
+			"set -Eeuo pipefail\n"+
+			"printf 'cpp fixture\\n'\n",
+		0o755,
+	)
+
+	writeFixtureFile(
+		t,
+		filepath.Join(
+			root,
+			"scripts",
+			"checks",
+			"docker.sh",
+		),
+		"#!/usr/bin/env bash\n"+
+			"set -Eeuo pipefail\n"+
+			"printf 'docker fixture\\n'\n",
+		0o755,
+	)
+
+	manifest := strings.Join(
+		[]string{
+			"version\t1",
+			"stage\tdocs\tDocumentation\t" +
+				"scripts/checks/docs.sh\ttrue\t",
+			"stage\tcpp\tC++\t" +
+				"scripts/checks/cpp.sh\ttrue\tdocs",
+			"stage\tdocker\tDocker\t" +
+				"scripts/checks/docker.sh\ttrue\tcpp",
+			"",
+		},
+		"\n",
+	)
+
+	writeFixtureFile(
+		t,
+		filepath.Join(
+			root,
+			"scripts",
+			"checks",
+			"manifest.tsv",
+		),
 		manifest,
 		0o644,
 	)
@@ -177,8 +368,14 @@ func writeFixtureFile(
 ) {
 	t.Helper()
 
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		t.Fatalf("create fixture directory: %v", err)
+	if err := os.MkdirAll(
+		filepath.Dir(path),
+		0o755,
+	); err != nil {
+		t.Fatalf(
+			"create fixture directory: %v",
+			err,
+		)
 	}
 
 	if err := os.WriteFile(
@@ -186,6 +383,9 @@ func writeFixtureFile(
 		[]byte(content),
 		permissions,
 	); err != nil {
-		t.Fatalf("write fixture file: %v", err)
+		t.Fatalf(
+			"write fixture file: %v",
+			err,
+		)
 	}
 }
