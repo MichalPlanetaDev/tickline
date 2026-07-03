@@ -19,6 +19,8 @@ enum class CommandRejectionCode : std::uint16_t {
     stale_target_tick = 8,
     target_tick_too_far_future = 9,
     velocity_out_of_range = 10,
+    duplicate_sequence = 11,
+    sequence_regression = 12,
 };
 
 struct CommandValidationPolicy final {
@@ -99,6 +101,12 @@ private:
 
     case CommandRejectionCode::velocity_out_of_range:
         return "velocity_out_of_range";
+
+    case CommandRejectionCode::duplicate_sequence:
+        return "duplicate_sequence";
+
+    case CommandRejectionCode::sequence_regression:
+        return "sequence_regression";
     }
 
     return "unknown";
