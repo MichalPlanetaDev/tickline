@@ -22,39 +22,42 @@ const (
 type EventKind string
 
 const (
-	EventRunStarted    EventKind = "run-started"
-	EventStageStarted  EventKind = "stage-started"
-	EventStageOutput   EventKind = "stage-output"
-	EventStageFinished EventKind = "stage-finished"
-	EventStageSkipped  EventKind = "stage-skipped"
-	EventRunFinished   EventKind = "run-finished"
+	EventRunStarted            EventKind = "run-started"
+	EventStageStarted          EventKind = "stage-started"
+	EventStageOutput           EventKind = "stage-output"
+	EventStageFinished         EventKind = "stage-finished"
+	EventStageSkipped          EventKind = "stage-skipped"
+	EventCancellationRequested EventKind = "cancellation-requested"
+	EventRunFinished           EventKind = "run-finished"
 )
 
 type Event struct {
-	Kind     EventKind
-	StageID  string
-	Stream   Stream
-	Sequence uint64
-	Data     []byte
-	Status   Status
-	Duration time.Duration
-	ExitCode int
-	At       time.Time
+	Kind              EventKind
+	StageID           string
+	Stream            Stream
+	Sequence          uint64
+	Data              []byte
+	Status            Status
+	Duration          time.Duration
+	ExitCode          int
+	TerminationSignal string
+	At                time.Time
 }
 
 type Observer func(Event)
 
 type StageResult struct {
-	ID         string
-	Label      string
-	ScriptPath string
-	Status     Status
-	StartedAt  time.Time
-	Duration   time.Duration
-	ExitCode   int
-	Stdout     []byte
-	Stderr     []byte
-	Error      string
+	ID                string
+	Label             string
+	ScriptPath        string
+	Status            Status
+	StartedAt         time.Time
+	Duration          time.Duration
+	ExitCode          int
+	TerminationSignal string
+	Stdout            []byte
+	Stderr            []byte
+	Error             string
 }
 
 type RunResult struct {

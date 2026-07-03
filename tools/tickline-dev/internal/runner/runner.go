@@ -16,9 +16,12 @@ import (
 	"github.com/MichalPlanetaDev/tickline/tools/tickline-dev/internal/task"
 )
 
+const defaultTerminationGracePeriod = 2 * time.Second
+
 type Runner struct {
-	RepositoryRoot string
-	Observer       Observer
+	RepositoryRoot         string
+	Observer               Observer
+	TerminationGracePeriod time.Duration
 }
 
 func (runner Runner) Run(
@@ -125,10 +128,7 @@ func (runner Runner) Run(
 			emit,
 		)
 
-		result.Stages = append(
-			result.Stages,
-			stage,
-		)
+		result.Stages = append(result.Stages, stage)
 
 		if stage.Status != StatusPassed {
 			result.Status = stage.Status
@@ -184,8 +184,10 @@ func (runner Runner) runStage(
 		filepath.FromSlash(current.ScriptPath),
 	)
 
-	command := exec.CommandContext(ctx, commandPath)
+	command := exec.Command(commandPath)
 	command.Dir = root
+
+	configureProcessTree(command)
 
 	stdoutPipe, err := command.StdoutPipe()
 	if err != nil {
@@ -255,9 +257,30 @@ func (runner Runner) runStage(
 		&readers,
 	)
 
-	waitErr := command.Wait()
+	readersDone := make(chan struct{})
 
-	readers.Wait()
+	go func() {
+		readers.Wait()
+		close(readersDone)
+	}()
+
+	processDone := make(chan error, 1)
+
+	go func() {
+		processDone <- command.Wait()
+	}()
+
+	waitErr, cancelled, supervisionErr :=
+		awaitCommand(
+			ctx,
+			command,
+			processDone,
+			readersDone,
+			runner.terminationGracePeriod(),
+			emit,
+			current.ID,
+		)
+
 	close(readErrors)
 
 	result.Stdout = append(
@@ -271,20 +294,29 @@ func (runner Runner) runStage(
 	)
 
 	result.Duration = time.Since(startedAt)
+	result.TerminationSignal = terminationSignal(
+		command.ProcessState,
+	)
 
 	var readErr error
 
 	for currentReadErr := range readErrors {
-		if readErr == nil {
-			readErr = currentReadErr
-		}
+		readErr = errors.Join(readErr, currentReadErr)
 	}
 
 	switch {
-	case ctx.Err() != nil:
+	case cancelled:
 		result.Status = StatusCancelled
 		result.ExitCode = 130
 		result.Error = ctx.Err().Error()
+
+		if supervisionErr != nil {
+			result.Error = fmt.Sprintf(
+				"%s; terminate process tree: %v",
+				result.Error,
+				supervisionErr,
+			)
+		}
 
 	case readErr != nil:
 		result.Status = StatusInternalError
@@ -310,6 +342,113 @@ func (runner Runner) runStage(
 	emitStageFinished(result, emit)
 
 	return result
+}
+
+func awaitCommand(
+	ctx context.Context,
+	command *exec.Cmd,
+	processDone <-chan error,
+	readersDone <-chan struct{},
+	gracePeriod time.Duration,
+	emit func(Event),
+	stageID string,
+) (error, bool, error) {
+	var waitErr error
+
+	processChannel := processDone
+	readersChannel := readersDone
+
+	for processChannel != nil || readersChannel != nil {
+		select {
+		case currentWaitErr := <-processChannel:
+			waitErr = currentWaitErr
+			processChannel = nil
+
+		case <-readersChannel:
+			readersChannel = nil
+
+		case <-ctx.Done():
+			emit(Event{
+				Kind:    EventCancellationRequested,
+				StageID: stageID,
+				At:      time.Now(),
+			})
+
+			return terminateAndDrain(
+				command,
+				processChannel,
+				readersChannel,
+				waitErr,
+				gracePeriod,
+			)
+		}
+	}
+
+	return waitErr, false, nil
+}
+
+func terminateAndDrain(
+	command *exec.Cmd,
+	processDone <-chan error,
+	readersDone <-chan struct{},
+	waitErr error,
+	gracePeriod time.Duration,
+) (error, bool, error) {
+	supervisionErr := terminateProcessTree(
+		command.Process,
+	)
+
+	timer := time.NewTimer(gracePeriod)
+	defer stopTimer(timer)
+
+	processChannel := processDone
+	readersChannel := readersDone
+
+	for processChannel != nil || readersChannel != nil {
+		select {
+		case currentWaitErr := <-processChannel:
+			waitErr = currentWaitErr
+			processChannel = nil
+
+		case <-readersChannel:
+			readersChannel = nil
+
+		case <-timer.C:
+			supervisionErr = errors.Join(
+				supervisionErr,
+				killProcessTree(command.Process),
+			)
+
+			if processChannel != nil {
+				waitErr = <-processChannel
+			}
+
+			if readersChannel != nil {
+				<-readersChannel
+			}
+
+			return waitErr, true, supervisionErr
+		}
+	}
+
+	return waitErr, true, supervisionErr
+}
+
+func stopTimer(timer *time.Timer) {
+	if !timer.Stop() {
+		select {
+		case <-timer.C:
+		default:
+		}
+	}
+}
+
+func (runner Runner) terminationGracePeriod() time.Duration {
+	if runner.TerminationGracePeriod <= 0 {
+		return defaultTerminationGracePeriod
+	}
+
+	return runner.TerminationGracePeriod
 }
 
 func captureStream(
@@ -397,11 +536,12 @@ func emitStageFinished(
 	emit func(Event),
 ) {
 	emit(Event{
-		Kind:     EventStageFinished,
-		StageID:  result.ID,
-		Status:   result.Status,
-		Duration: result.Duration,
-		ExitCode: result.ExitCode,
-		At:       time.Now(),
+		Kind:              EventStageFinished,
+		StageID:           result.ID,
+		Status:            result.Status,
+		Duration:          result.Duration,
+		ExitCode:          result.ExitCode,
+		TerminationSignal: result.TerminationSignal,
+		At:                time.Now(),
 	})
 }
