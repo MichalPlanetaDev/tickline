@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -100,6 +101,7 @@ func TestCheckExecutesSelectedStage(t *testing.T) {
 		"documentation fixture",
 		"Result: passed",
 		"1 passed",
+		"Logs: reports/check-local/",
 	} {
 		if !strings.Contains(output, expected) {
 			t.Fatalf(
@@ -261,6 +263,186 @@ func TestCheckMapsStageFailureToExitCodeOne(
 		t.Fatalf(
 			"expected failed summary, got %q",
 			stdout.String(),
+		)
+	}
+}
+
+func TestCheckWritesVersionedJSON(t *testing.T) {
+	root := createCheckRepository(t)
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	exitCode := cli.Run(
+		[]string{
+			"check",
+			"--json",
+			"--only",
+			"docs",
+		},
+		cli.Dependencies{
+			Stdout:           &stdout,
+			Stderr:           &stderr,
+			WorkingDirectory: root,
+		},
+	)
+
+	if exitCode != cli.ExitSuccess {
+		t.Fatalf(
+			"expected success, got %d: %s",
+			exitCode,
+			stderr.String(),
+		)
+	}
+
+	if stderr.String() != "" {
+		t.Fatalf(
+			"expected empty stderr, got %q",
+			stderr.String(),
+		)
+	}
+
+	if strings.Contains(
+		stdout.String(),
+		"documentation fixture",
+	) {
+		t.Fatalf(
+			"stage output leaked into JSON: %q",
+			stdout.String(),
+		)
+	}
+
+	var report struct {
+		SchemaVersion int    `json:"schema_version"`
+		RunID         string `json:"run_id"`
+		Status        string `json:"status"`
+		Interrupted   bool   `json:"interrupted"`
+		LogDirectory  string `json:"log_directory"`
+		Stages        []struct {
+			ID       string `json:"id"`
+			Status   string `json:"status"`
+			ExitCode int    `json:"exit_code"`
+			LogPath  string `json:"log_path"`
+		} `json:"stages"`
+	}
+
+	if err := json.Unmarshal(
+		stdout.Bytes(),
+		&report,
+	); err != nil {
+		t.Fatalf(
+			"decode JSON result: %v\n%s",
+			err,
+			stdout.String(),
+		)
+	}
+
+	if report.SchemaVersion != 1 {
+		t.Fatalf(
+			"expected schema version 1, got %d",
+			report.SchemaVersion,
+		)
+	}
+
+	if report.RunID == "" {
+		t.Fatal("expected non-empty run identifier")
+	}
+
+	if report.Status != "passed" {
+		t.Fatalf(
+			"unexpected status: %q",
+			report.Status,
+		)
+	}
+
+	if report.Interrupted {
+		t.Fatal("successful run must not be interrupted")
+	}
+
+	if !strings.HasPrefix(
+		report.LogDirectory,
+		"reports/check-local/",
+	) {
+		t.Fatalf(
+			"unexpected log directory: %q",
+			report.LogDirectory,
+		)
+	}
+
+	if len(report.Stages) != 1 {
+		t.Fatalf(
+			"expected one stage, got %d",
+			len(report.Stages),
+		)
+	}
+
+	stage := report.Stages[0]
+
+	if stage.ID != "docs" ||
+		stage.Status != "passed" ||
+		stage.ExitCode != 0 {
+		t.Fatalf(
+			"unexpected stage result: %#v",
+			stage,
+		)
+	}
+
+	logPath := filepath.Join(
+		root,
+		filepath.FromSlash(stage.LogPath),
+	)
+
+	if _, err := os.Stat(logPath); err != nil {
+		t.Fatalf(
+			"expected stage log at %q: %v",
+			logPath,
+			err,
+		)
+	}
+}
+
+func TestCheckRejectsJSONPlanCombination(
+	t *testing.T,
+) {
+	root := createCheckRepository(t)
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	exitCode := cli.Run(
+		[]string{
+			"check",
+			"--json",
+			"--plan",
+		},
+		cli.Dependencies{
+			Stdout:           &stdout,
+			Stderr:           &stderr,
+			WorkingDirectory: root,
+		},
+	)
+
+	if exitCode != cli.ExitInvalidUsage {
+		t.Fatalf(
+			"expected invalid usage, got %d",
+			exitCode,
+		)
+	}
+
+	if stdout.String() != "" {
+		t.Fatalf(
+			"expected empty stdout, got %q",
+			stdout.String(),
+		)
+	}
+
+	if !strings.Contains(
+		stderr.String(),
+		"cannot be combined",
+	) {
+		t.Fatalf(
+			"unexpected stderr: %q",
+			stderr.String(),
 		)
 	}
 }

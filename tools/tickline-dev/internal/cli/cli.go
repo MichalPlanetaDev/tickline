@@ -81,6 +81,7 @@ Commands:
 
 Check options:
   --plan          Validate and display the execution plan
+  --json          Emit one versioned JSON result document
   --only <ids>    Select comma-separated stages
   --skip <ids>    Skip comma-separated stages
 

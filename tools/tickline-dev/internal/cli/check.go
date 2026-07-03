@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/MichalPlanetaDev/tickline/tools/tickline-dev/internal/report/jsonreport"
 	"github.com/MichalPlanetaDev/tickline/tools/tickline-dev/internal/repository"
 	"github.com/MichalPlanetaDev/tickline/tools/tickline-dev/internal/runlog"
 	"github.com/MichalPlanetaDev/tickline/tools/tickline-dev/internal/runner"
@@ -26,12 +27,20 @@ func runCheck(args []string, dependencies Dependencies) int {
 	var onlyValue string
 	var skipValue string
 	var planOnly bool
+	var jsonOutput bool
 
 	flags.BoolVar(
 		&planOnly,
 		"plan",
 		false,
 		"display the execution plan without running it",
+	)
+
+	flags.BoolVar(
+		&jsonOutput,
+		"json",
+		false,
+		"emit one versioned JSON result document",
 	)
 
 	flags.StringVar(
@@ -61,6 +70,15 @@ func runCheck(args []string, dependencies Dependencies) int {
 			dependencies.Stderr,
 			"unexpected check argument: %s\n",
 			flags.Arg(0),
+		)
+
+		return ExitInvalidUsage
+	}
+
+	if planOnly && jsonOutput {
+		fmt.Fprintln(
+			dependencies.Stderr,
+			"--plan and --json cannot be combined",
 		)
 
 		return ExitInvalidUsage
@@ -155,18 +173,20 @@ func runCheck(args []string, dependencies Dependencies) int {
 		lastOutputEndedWithNewline[current.ID] = true
 	}
 
-	fmt.Fprintln(
-		dependencies.Stdout,
-		"Tickline local verification",
-	)
+	if !jsonOutput {
+		fmt.Fprintln(
+			dependencies.Stdout,
+			"Tickline local verification",
+		)
 
-	fmt.Fprintln(dependencies.Stdout)
+		fmt.Fprintln(dependencies.Stdout)
 
-	fmt.Fprintf(
-		dependencies.Stdout,
-		"Run: %s\n\n",
-		logStore.RunID(),
-	)
+		fmt.Fprintf(
+			dependencies.Stdout,
+			"Run: %s\n\n",
+			logStore.RunID(),
+		)
+	}
 
 	var logWriteError error
 
@@ -176,6 +196,10 @@ func runCheck(args []string, dependencies Dependencies) int {
 		Observer: func(event runner.Event) {
 			if logWriteError == nil {
 				logWriteError = logStore.Observe(event)
+			}
+
+			if jsonOutput {
+				return
 			}
 
 			switch event.Kind {
@@ -234,21 +258,15 @@ func runCheck(args []string, dependencies Dependencies) int {
 
 	closeError := logStore.Close()
 
-	if runError != nil {
+	if combinedError := errors.Join(
+		runError,
+		logWriteError,
+		closeError,
+	); combinedError != nil {
 		fmt.Fprintf(
 			dependencies.Stderr,
 			"run verification: %v\n",
-			errors.Join(runError, closeError),
-		)
-
-		return ExitInternalError
-	}
-
-	if logWriteError != nil || closeError != nil {
-		fmt.Fprintf(
-			dependencies.Stderr,
-			"write verification logs: %v\n",
-			errors.Join(logWriteError, closeError),
+			combinedError,
 		)
 
 		return ExitInternalError
@@ -258,7 +276,7 @@ func runCheck(args []string, dependencies Dependencies) int {
 	result.LogDirectory = logStore.RelativeDirectory()
 
 	for index := range result.Stages {
-		if result.Stages[index].Status == runner.StatusSkipped {
+		if result.Stages[index].StartedAt.IsZero() {
 			continue
 		}
 
@@ -266,6 +284,23 @@ func runCheck(args []string, dependencies Dependencies) int {
 			logStore.StageCombinedPath(
 				result.Stages[index].ID,
 			)
+	}
+
+	if jsonOutput {
+		if err := jsonreport.Write(
+			dependencies.Stdout,
+			result,
+		); err != nil {
+			fmt.Fprintf(
+				dependencies.Stderr,
+				"write JSON result: %v\n",
+				err,
+			)
+
+			return ExitInternalError
+		}
+
+		return exitCodeForStatus(result.Status)
 	}
 
 	passed, failed, skipped, cancelled, internal :=
@@ -301,22 +336,7 @@ func runCheck(args []string, dependencies Dependencies) int {
 		result.LogDirectory,
 	)
 
-	switch result.Status {
-	case runner.StatusPassed:
-		return ExitSuccess
-
-	case runner.StatusFailed:
-		return ExitCheckFailed
-
-	case runner.StatusCancelled:
-		return ExitInterrupted
-
-	case runner.StatusInternalError:
-		return ExitInternalError
-
-	default:
-		return ExitInternalError
-	}
+	return exitCodeForStatus(result.Status)
 }
 
 func printExecutionPlan(
@@ -419,6 +439,25 @@ func countStatuses(
 	}
 
 	return passed, failed, skipped, cancelled, internal
+}
+
+func exitCodeForStatus(status runner.Status) int {
+	switch status {
+	case runner.StatusPassed:
+		return ExitSuccess
+
+	case runner.StatusFailed:
+		return ExitCheckFailed
+
+	case runner.StatusCancelled:
+		return ExitInterrupted
+
+	case runner.StatusInternalError:
+		return ExitInternalError
+
+	default:
+		return ExitInternalError
+	}
 }
 
 func formatDuration(duration time.Duration) string {
