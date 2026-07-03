@@ -50,6 +50,7 @@ type StageResult struct {
 	ID                string
 	Label             string
 	ScriptPath        string
+	LogPath           string
 	Status            Status
 	StartedAt         time.Time
 	Duration          time.Duration
@@ -61,8 +62,10 @@ type StageResult struct {
 }
 
 type RunResult struct {
-	Status    Status
-	StartedAt time.Time
-	Duration  time.Duration
-	Stages    []StageResult
+	RunID        string
+	LogDirectory string
+	Status       Status
+	StartedAt    time.Time
+	Duration     time.Duration
+	Stages       []StageResult
 }

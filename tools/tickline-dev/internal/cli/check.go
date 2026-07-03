@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/MichalPlanetaDev/tickline/tools/tickline-dev/internal/repository"
+	"github.com/MichalPlanetaDev/tickline/tools/tickline-dev/internal/runlog"
 	"github.com/MichalPlanetaDev/tickline/tools/tickline-dev/internal/runner"
 	"github.com/MichalPlanetaDev/tickline/tools/tickline-dev/internal/task"
 )
@@ -122,6 +123,17 @@ func runCheck(args []string, dependencies Dependencies) int {
 		return ExitSuccess
 	}
 
+	logStore, err := runlog.Create(repositoryRoot)
+	if err != nil {
+		fmt.Fprintf(
+			dependencies.Stderr,
+			"create verification logs: %v\n",
+			err,
+		)
+
+		return ExitInternalError
+	}
+
 	stageNumbers := make(
 		map[string]int,
 		len(plan),
@@ -150,10 +162,22 @@ func runCheck(args []string, dependencies Dependencies) int {
 
 	fmt.Fprintln(dependencies.Stdout)
 
+	fmt.Fprintf(
+		dependencies.Stdout,
+		"Run: %s\n\n",
+		logStore.RunID(),
+	)
+
+	var logWriteError error
+
 	executor := runner.Runner{
 		RepositoryRoot: repositoryRoot,
 
 		Observer: func(event runner.Event) {
+			if logWriteError == nil {
+				logWriteError = logStore.Observe(event)
+			}
+
 			switch event.Kind {
 			case runner.EventStageStarted:
 				fmt.Fprintf(
@@ -203,18 +227,45 @@ func runCheck(args []string, dependencies Dependencies) int {
 		},
 	}
 
-	result, err := executor.Run(
+	result, runError := executor.Run(
 		dependencies.Context,
 		plan,
 	)
-	if err != nil {
+
+	closeError := logStore.Close()
+
+	if runError != nil {
 		fmt.Fprintf(
 			dependencies.Stderr,
 			"run verification: %v\n",
-			err,
+			errors.Join(runError, closeError),
 		)
 
 		return ExitInternalError
+	}
+
+	if logWriteError != nil || closeError != nil {
+		fmt.Fprintf(
+			dependencies.Stderr,
+			"write verification logs: %v\n",
+			errors.Join(logWriteError, closeError),
+		)
+
+		return ExitInternalError
+	}
+
+	result.RunID = logStore.RunID()
+	result.LogDirectory = logStore.RelativeDirectory()
+
+	for index := range result.Stages {
+		if result.Stages[index].Status == runner.StatusSkipped {
+			continue
+		}
+
+		result.Stages[index].LogPath =
+			logStore.StageCombinedPath(
+				result.Stages[index].ID,
+			)
 	}
 
 	passed, failed, skipped, cancelled, internal :=
@@ -242,6 +293,12 @@ func runCheck(args []string, dependencies Dependencies) int {
 		dependencies.Stdout,
 		"Total: %s\n",
 		formatDuration(result.Duration),
+	)
+
+	fmt.Fprintf(
+		dependencies.Stdout,
+		"Logs: %s\n",
+		result.LogDirectory,
 	)
 
 	switch result.Status {
@@ -319,6 +376,14 @@ func printStageCompletion(
 			output,
 			" with exit code %d",
 			event.ExitCode,
+		)
+	}
+
+	if event.TerminationSignal != "" {
+		fmt.Fprintf(
+			output,
+			" after signal %s",
+			event.TerminationSignal,
 		)
 	}
 
