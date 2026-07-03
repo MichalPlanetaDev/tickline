@@ -58,6 +58,7 @@ endif()
 
 add_library(
     tickline_core
+    cpp/src/command/command_validator.cpp
     cpp/src/simulation/canonical_state.cpp
     cpp/src/simulation/state_fingerprint.cpp
     cpp/src/simulation/world.cpp
@@ -150,4 +151,22 @@ target_link_libraries(
 add_test(
     NAME tickline_canonical_state_tests
     COMMAND tickline_canonical_state_tests
+)
+
+add_executable(
+    tickline_command_validator_tests
+    cpp/tests/command_validator_tests.cpp
+)
+
+target_link_libraries(
+    tickline_command_validator_tests
+    PRIVATE
+        tickline_core
+        tickline_project_options
+        tickline_project_warnings
+)
+
+add_test(
+    NAME tickline_command_validator_tests
+    COMMAND tickline_command_validator_tests
 )
