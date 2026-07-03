@@ -17,10 +17,12 @@ const (
 )
 
 type Dependencies struct {
-	Context          context.Context
-	Stdout           io.Writer
-	Stderr           io.Writer
-	WorkingDirectory string
+	Context           context.Context
+	Stdin             io.Reader
+	Stdout            io.Writer
+	Stderr            io.Writer
+	WorkingDirectory  string
+	TerminalAvailable bool
 }
 
 func Run(args []string, dependencies Dependencies) int {
@@ -81,9 +83,15 @@ Commands:
 
 Check options:
   --plan          Validate and display the execution plan
+  --plain         Force line-oriented plain output
+  --tui           Force the interactive terminal interface
   --json          Emit one versioned JSON result document
   --only <ids>    Select comma-separated stages
   --skip <ids>    Skip comma-separated stages
+
+Mode selection:
+  A compatible interactive terminal uses the TUI automatically.
+  Redirected output and unsupported terminals use plain output.
 
 Global options:
   -h, --help       Show help

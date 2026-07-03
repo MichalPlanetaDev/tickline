@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -55,6 +56,8 @@ type Model struct {
 	cancelling   bool
 	result       runner.RunResult
 	runError     error
+	events       <-chan tea.Msg
+	cancel       context.CancelFunc
 }
 
 func NewModel(
@@ -90,8 +93,18 @@ func NewModel(
 	}
 }
 
+func (model Model) withRuntime(
+	events <-chan tea.Msg,
+	cancel context.CancelFunc,
+) Model {
+	model.events = events
+	model.cancel = cancel
+
+	return model
+}
+
 func (model Model) Init() tea.Cmd {
-	return nil
+	return model.waitForEvent()
 }
 
 func (model Model) Update(
@@ -127,14 +140,25 @@ func (model Model) Update(
 			}
 
 		case "q", "esc":
-			return model, tea.Quit
+			if model.completed {
+				return model, tea.Quit
+			}
+
+			model.requestCancellation()
 
 		case "ctrl+c":
-			model.cancelling = true
+			model.requestCancellation()
+
+		case "enter":
+			if model.completed {
+				return model, tea.Quit
+			}
 		}
 
 	case RunnerEventMsg:
 		model.applyRunnerEvent(current.Event)
+
+		return model, model.waitForEvent()
 
 	case RunFinishedMsg:
 		model.completed = true
@@ -143,6 +167,10 @@ func (model Model) Update(
 
 		if current.Result.RunID != "" {
 			model.runID = current.Result.RunID
+		}
+
+		if current.Result.Status == runner.StatusCancelled {
+			return model, tea.Quit
 		}
 	}
 
@@ -157,6 +185,26 @@ func (model Model) View() tea.View {
 	view.WindowTitle = "Tickline Developer Console"
 
 	return view
+}
+
+func (model Model) waitForEvent() tea.Cmd {
+	if model.events == nil || model.completed {
+		return nil
+	}
+
+	return waitForMessage(model.events)
+}
+
+func (model *Model) requestCancellation() {
+	if model.completed || model.cancelling {
+		return
+	}
+
+	model.cancelling = true
+
+	if model.cancel != nil {
+		model.cancel()
+	}
 }
 
 func (model *Model) applyRunnerEvent(

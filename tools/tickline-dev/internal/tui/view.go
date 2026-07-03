@@ -163,7 +163,7 @@ func (model Model) renderHeader(
 func (model Model) renderFooter(
 	width int,
 ) string {
-	left := "j/k navigate   g/G first/last   q quit"
+	left := model.footerControls()
 	right := model.footerStatus()
 
 	available := max(
@@ -181,9 +181,22 @@ func (model Model) renderFooter(
 		Render(content)
 }
 
+func (model Model) footerControls() string {
+	switch {
+	case model.completed:
+		return "j/k navigate   g/G first/last   enter/q quit"
+
+	case model.cancelling:
+		return "cancellation requested"
+
+	default:
+		return "j/k navigate   g/G first/last   q/ctrl+c cancel"
+	}
+}
+
 func (model Model) footerStatus() string {
 	switch {
-	case model.cancelling:
+	case model.cancelling && !model.completed:
 		return errorStyle.Render("CANCELLING")
 
 	case model.completed && model.runError != nil:
@@ -199,10 +212,11 @@ func (model Model) footerStatus() string {
 		)
 
 	default:
-		passed, total := model.progress()
+		completed, total := model.progress()
+
 		return fmt.Sprintf(
 			"%d/%d COMPLETE",
-			passed,
+			completed,
 			total,
 		)
 	}
@@ -461,7 +475,7 @@ func (model Model) renderMinimal(
 	}
 
 	content := fmt.Sprintf(
-		"Tickline\n%s\nq: quit",
+		"Tickline\n%s\nq: cancel or quit",
 		stageText,
 	)
 

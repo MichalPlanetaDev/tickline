@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -14,6 +15,15 @@ import (
 	"github.com/MichalPlanetaDev/tickline/tools/tickline-dev/internal/runlog"
 	"github.com/MichalPlanetaDev/tickline/tools/tickline-dev/internal/runner"
 	"github.com/MichalPlanetaDev/tickline/tools/tickline-dev/internal/task"
+	"github.com/MichalPlanetaDev/tickline/tools/tickline-dev/internal/tui"
+)
+
+type checkOutputMode int
+
+const (
+	checkOutputPlain checkOutputMode = iota
+	checkOutputJSON
+	checkOutputTUI
 )
 
 func runCheck(args []string, dependencies Dependencies) int {
@@ -27,7 +37,9 @@ func runCheck(args []string, dependencies Dependencies) int {
 	var onlyValue string
 	var skipValue string
 	var planOnly bool
+	var plainOutput bool
 	var jsonOutput bool
+	var tuiOutput bool
 
 	flags.BoolVar(
 		&planOnly,
@@ -37,10 +49,24 @@ func runCheck(args []string, dependencies Dependencies) int {
 	)
 
 	flags.BoolVar(
+		&plainOutput,
+		"plain",
+		false,
+		"force line-oriented plain output",
+	)
+
+	flags.BoolVar(
 		&jsonOutput,
 		"json",
 		false,
 		"emit one versioned JSON result document",
+	)
+
+	flags.BoolVar(
+		&tuiOutput,
+		"tui",
+		false,
+		"force the interactive terminal interface",
 	)
 
 	flags.StringVar(
@@ -75,10 +101,18 @@ func runCheck(args []string, dependencies Dependencies) int {
 		return ExitInvalidUsage
 	}
 
-	if planOnly && jsonOutput {
-		fmt.Fprintln(
+	mode, err := resolveCheckOutputMode(
+		planOnly,
+		plainOutput,
+		jsonOutput,
+		tuiOutput,
+		dependencies.TerminalAvailable,
+	)
+	if err != nil {
+		fmt.Fprintf(
 			dependencies.Stderr,
-			"--plan and --json cannot be combined",
+			"select output mode: %v\n",
+			err,
 		)
 
 		return ExitInvalidUsage
@@ -152,6 +186,227 @@ func runCheck(args []string, dependencies Dependencies) int {
 		return ExitInternalError
 	}
 
+	execute := newExecutionFunction(
+		repositoryRoot,
+		plan,
+		logStore,
+	)
+
+	var result runner.RunResult
+
+	switch mode {
+	case checkOutputTUI:
+		if dependencies.Stdin == nil {
+			fmt.Fprintln(
+				dependencies.Stderr,
+				"interactive mode requires an input stream",
+			)
+
+			_ = logStore.Close()
+
+			return ExitInternalError
+		}
+
+		result, err = tui.Run(
+			dependencies.Context,
+			dependencies.Stdin,
+			dependencies.Stdout,
+			plan,
+			logStore.RunID(),
+			execute,
+		)
+
+	case checkOutputJSON:
+		result, err = execute(
+			dependencies.Context,
+			nil,
+		)
+
+	case checkOutputPlain:
+		printPlainHeader(
+			dependencies.Stdout,
+			logStore.RunID(),
+		)
+
+		result, err = execute(
+			dependencies.Context,
+			newPlainObserver(
+				dependencies,
+				plan,
+			),
+		)
+
+	default:
+		err = errors.New("unsupported output mode")
+	}
+
+	if err != nil {
+		fmt.Fprintf(
+			dependencies.Stderr,
+			"run verification: %v\n",
+			err,
+		)
+
+		return ExitInternalError
+	}
+
+	switch mode {
+	case checkOutputJSON:
+		if err := jsonreport.Write(
+			dependencies.Stdout,
+			result,
+		); err != nil {
+			fmt.Fprintf(
+				dependencies.Stderr,
+				"write JSON result: %v\n",
+				err,
+			)
+
+			return ExitInternalError
+		}
+
+	case checkOutputPlain:
+		printPlainSummary(
+			dependencies.Stdout,
+			result,
+		)
+	}
+
+	return exitCodeForStatus(result.Status)
+}
+
+func resolveCheckOutputMode(
+	planOnly bool,
+	plainOutput bool,
+	jsonOutput bool,
+	tuiOutput bool,
+	terminalAvailable bool,
+) (checkOutputMode, error) {
+	explicitModes := 0
+
+	for _, enabled := range []bool{
+		plainOutput,
+		jsonOutput,
+		tuiOutput,
+	} {
+		if enabled {
+			explicitModes++
+		}
+	}
+
+	if explicitModes > 1 {
+		return checkOutputPlain, errors.New(
+			"--plain, --json, and --tui are mutually exclusive",
+		)
+	}
+
+	if planOnly && explicitModes != 0 {
+		return checkOutputPlain, errors.New(
+			"--plan cannot be combined with an output-mode flag",
+		)
+	}
+
+	if jsonOutput {
+		return checkOutputJSON, nil
+	}
+
+	if plainOutput {
+		return checkOutputPlain, nil
+	}
+
+	if tuiOutput {
+		if !terminalAvailable {
+			return checkOutputPlain, errors.New(
+				"--tui requires an interactive input and output terminal",
+			)
+		}
+
+		return checkOutputTUI, nil
+	}
+
+	if terminalAvailable {
+		return checkOutputTUI, nil
+	}
+
+	return checkOutputPlain, nil
+}
+
+func newExecutionFunction(
+	repositoryRoot string,
+	plan []task.Task,
+	logStore *runlog.Store,
+) tui.ExecuteFunc {
+	return func(
+		ctx context.Context,
+		observer runner.Observer,
+	) (runner.RunResult, error) {
+		var logWriteError error
+
+		executor := runner.Runner{
+			RepositoryRoot: repositoryRoot,
+
+			Observer: func(event runner.Event) {
+				if logWriteError == nil {
+					logWriteError = logStore.Observe(event)
+				}
+
+				if observer != nil {
+					observer(event)
+				}
+			},
+		}
+
+		result, runError := executor.Run(
+			ctx,
+			plan,
+		)
+
+		closeError := logStore.Close()
+
+		result.RunID = logStore.RunID()
+		result.LogDirectory = logStore.RelativeDirectory()
+
+		for index := range result.Stages {
+			if result.Stages[index].StartedAt.IsZero() {
+				continue
+			}
+
+			result.Stages[index].LogPath =
+				logStore.StageCombinedPath(
+					result.Stages[index].ID,
+				)
+		}
+
+		return result, errors.Join(
+			runError,
+			logWriteError,
+			closeError,
+		)
+	}
+}
+
+func printPlainHeader(
+	output io.Writer,
+	runID string,
+) {
+	fmt.Fprintln(
+		output,
+		"Tickline local verification",
+	)
+
+	fmt.Fprintln(output)
+
+	fmt.Fprintf(
+		output,
+		"Run: %s\n\n",
+		runID,
+	)
+}
+
+func newPlainObserver(
+	dependencies Dependencies,
+	plan []task.Task,
+) runner.Observer {
 	stageNumbers := make(
 		map[string]int,
 		len(plan),
@@ -173,147 +428,71 @@ func runCheck(args []string, dependencies Dependencies) int {
 		lastOutputEndedWithNewline[current.ID] = true
 	}
 
-	if !jsonOutput {
-		fmt.Fprintln(
-			dependencies.Stdout,
-			"Tickline local verification",
-		)
-
-		fmt.Fprintln(dependencies.Stdout)
-
-		fmt.Fprintf(
-			dependencies.Stdout,
-			"Run: %s\n\n",
-			logStore.RunID(),
-		)
-	}
-
-	var logWriteError error
-
-	executor := runner.Runner{
-		RepositoryRoot: repositoryRoot,
-
-		Observer: func(event runner.Event) {
-			if logWriteError == nil {
-				logWriteError = logStore.Observe(event)
-			}
-
-			if jsonOutput {
-				return
-			}
-
-			switch event.Kind {
-			case runner.EventStageStarted:
-				fmt.Fprintf(
-					dependencies.Stdout,
-					"[%d/%d] %s\n",
-					stageNumbers[event.StageID],
-					len(plan),
-					stageLabels[event.StageID],
-				)
-
-			case runner.EventStageOutput:
-				output := dependencies.Stdout
-
-				if event.Stream == runner.StreamStderr {
-					output = dependencies.Stderr
-				}
-
-				_, _ = output.Write(event.Data)
-
-				if len(event.Data) != 0 {
-					lastOutputEndedWithNewline[event.StageID] =
-						event.Data[len(event.Data)-1] == '\n'
-				}
-
-			case runner.EventStageFinished:
-				if !lastOutputEndedWithNewline[event.StageID] {
-					fmt.Fprintln(dependencies.Stdout)
-				}
-
-				printStageCompletion(
-					dependencies,
-					event,
-				)
-
-				fmt.Fprintln(dependencies.Stdout)
-
-			case runner.EventStageSkipped:
-				fmt.Fprintf(
-					dependencies.Stdout,
-					"[%d/%d] %s\n"+
-						"    skipped\n\n",
-					stageNumbers[event.StageID],
-					len(plan),
-					stageLabels[event.StageID],
-				)
-			}
-		},
-	}
-
-	result, runError := executor.Run(
-		dependencies.Context,
-		plan,
-	)
-
-	closeError := logStore.Close()
-
-	if combinedError := errors.Join(
-		runError,
-		logWriteError,
-		closeError,
-	); combinedError != nil {
-		fmt.Fprintf(
-			dependencies.Stderr,
-			"run verification: %v\n",
-			combinedError,
-		)
-
-		return ExitInternalError
-	}
-
-	result.RunID = logStore.RunID()
-	result.LogDirectory = logStore.RelativeDirectory()
-
-	for index := range result.Stages {
-		if result.Stages[index].StartedAt.IsZero() {
-			continue
-		}
-
-		result.Stages[index].LogPath =
-			logStore.StageCombinedPath(
-				result.Stages[index].ID,
-			)
-	}
-
-	if jsonOutput {
-		if err := jsonreport.Write(
-			dependencies.Stdout,
-			result,
-		); err != nil {
+	return func(event runner.Event) {
+		switch event.Kind {
+		case runner.EventStageStarted:
 			fmt.Fprintf(
-				dependencies.Stderr,
-				"write JSON result: %v\n",
-				err,
+				dependencies.Stdout,
+				"[%d/%d] %s\n",
+				stageNumbers[event.StageID],
+				len(plan),
+				stageLabels[event.StageID],
 			)
 
-			return ExitInternalError
+		case runner.EventStageOutput:
+			output := dependencies.Stdout
+
+			if event.Stream == runner.StreamStderr {
+				output = dependencies.Stderr
+			}
+
+			_, _ = output.Write(event.Data)
+
+			if len(event.Data) != 0 {
+				lastOutputEndedWithNewline[event.StageID] =
+					event.Data[len(event.Data)-1] == '\n'
+			}
+
+		case runner.EventStageFinished:
+			if !lastOutputEndedWithNewline[event.StageID] {
+				fmt.Fprintln(dependencies.Stdout)
+			}
+
+			printStageCompletion(
+				dependencies,
+				event,
+			)
+
+			fmt.Fprintln(dependencies.Stdout)
+
+		case runner.EventStageSkipped:
+			fmt.Fprintf(
+				dependencies.Stdout,
+				"[%d/%d] %s\n"+
+					"    skipped\n\n",
+				stageNumbers[event.StageID],
+				len(plan),
+				stageLabels[event.StageID],
+			)
 		}
-
-		return exitCodeForStatus(result.Status)
 	}
+}
 
+func printPlainSummary(
+	output io.Writer,
+	result runner.RunResult,
+) {
 	passed, failed, skipped, cancelled, internal :=
 		countStatuses(result.Stages)
 
 	fmt.Fprintf(
-		dependencies.Stdout,
+		output,
 		"Result: %s\n",
 		result.Status,
 	)
 
 	fmt.Fprintf(
-		dependencies.Stdout,
+		output,
 		"Checks: %d passed, %d failed, "+
 			"%d skipped, %d cancelled, "+
 			"%d internal error\n",
@@ -325,18 +504,16 @@ func runCheck(args []string, dependencies Dependencies) int {
 	)
 
 	fmt.Fprintf(
-		dependencies.Stdout,
+		output,
 		"Total: %s\n",
 		formatDuration(result.Duration),
 	)
 
 	fmt.Fprintf(
-		dependencies.Stdout,
+		output,
 		"Logs: %s\n",
 		result.LogDirectory,
 	)
-
-	return exitCodeForStatus(result.Status)
 }
 
 func printExecutionPlan(
