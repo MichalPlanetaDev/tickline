@@ -1,8 +1,6 @@
 # Tickline
 
-Deterministic security-engineering range for authoritative simulation, protocol hardening, cryptographic evidence integrity, forensic replay, and production-style workflow project.
-
-Tickline is a lawful systems/security portfolio project. Its purpose is to demonstrate how a game-security platform can be designed around deterministic simulation, untrusted-client assumptions, hardened protocol boundaries, tamper-evident evidence, runtime diagnostics, and disciplined engineering workflow.
+Tickline is a lawful systems/security portfolio project. Its purpose is to demonstrate how a game-security platform can be well designed.
 
 This is not a cheat project, bypass project, malware project, or reverse-engineering target for third-party software. All adversarial testing is performed against owned code inside this repository.
 
