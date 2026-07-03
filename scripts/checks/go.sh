@@ -1,27 +1,48 @@
 #!/usr/bin/env bash
+
 set -Eeuo pipefail
 
-repository_root="$(
-    cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." &&
+script_dir="$(
+    cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
     pwd
 )"
 
-module_root="$repository_root/tools/tickline-dev"
-
-cd "$module_root"
-
-unformatted="$(
-    find . \
-        -type f \
-        -name '*.go' \
-        -exec gofmt -l {} +
+repository_root="$(
+    cd -- "$script_dir/../.."
+    pwd
 )"
 
-if [[ -n "$unformatted" ]]; then
-    printf '%s\n' "Go files require formatting:" >&2
-    printf '%s\n' "$unformatted" >&2
+module_directory="$repository_root/tools/tickline-dev"
+temporary_directory="$(mktemp -d)"
+
+cleanup() {
+    rm -rf -- "$temporary_directory"
+}
+
+trap cleanup EXIT
+
+go -C "$module_directory" test ./...
+go -C "$module_directory" test -race ./...
+go -C "$module_directory" vet ./...
+
+binary_path="$temporary_directory/tickline-dev"
+
+go -C "$module_directory" build \
+    -trimpath \
+    -o "$binary_path" \
+    ./cmd/tickline-dev
+
+expected_version="tickline-dev 0.3.0"
+actual_version="$("$binary_path" version)"
+
+if [[ "$actual_version" != "$expected_version" ]]; then
+    printf \
+        'unexpected developer-console version: expected %q, got %q\n' \
+        "$expected_version" \
+        "$actual_version" \
+        >&2
+
     exit 1
 fi
 
-go test ./...
-go vet ./...
+"$binary_path" check --plan >/dev/null
