@@ -18,6 +18,8 @@ import (
 	"github.com/MichalPlanetaDev/tickline/tools/tickline-dev/internal/tui"
 )
 
+const resultArtifactName = "result.json"
+
 type checkOutputMode int
 
 const (
@@ -237,7 +239,10 @@ func runCheck(args []string, dependencies Dependencies) int {
 		)
 
 	default:
-		err = errors.New("unsupported output mode")
+		err = errors.Join(
+			errors.New("unsupported output mode"),
+			logStore.Close(),
+		)
 	}
 
 	if err != nil {
@@ -361,10 +366,11 @@ func newExecutionFunction(
 			plan,
 		)
 
-		closeError := logStore.Close()
-
 		result.RunID = logStore.RunID()
 		result.LogDirectory = logStore.RelativeDirectory()
+		result.ResultPath = logStore.ArtifactPath(
+			resultArtifactName,
+		)
 
 		for index := range result.Stages {
 			if result.Stages[index].StartedAt.IsZero() {
@@ -377,9 +383,25 @@ func newExecutionFunction(
 				)
 		}
 
+		reportData, reportError :=
+			jsonreport.Marshal(result)
+
+		var artifactError error
+
+		if reportError == nil {
+			_, artifactError = logStore.WriteArtifact(
+				resultArtifactName,
+				reportData,
+			)
+		}
+
+		closeError := logStore.Close()
+
 		return result, errors.Join(
 			runError,
 			logWriteError,
+			reportError,
+			artifactError,
 			closeError,
 		)
 	}
@@ -513,6 +535,12 @@ func printPlainSummary(
 		output,
 		"Logs: %s\n",
 		result.LogDirectory,
+	)
+
+	fmt.Fprintf(
+		output,
+		"Report: %s\n",
+		result.ResultPath,
 	)
 }
 

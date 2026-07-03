@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -84,7 +85,10 @@ func create(
 		"check-local",
 	)
 
-	if err := os.MkdirAll(parentDirectory, 0o755); err != nil {
+	if err := os.MkdirAll(
+		parentDirectory,
+		0o755,
+	); err != nil {
 		return nil, fmt.Errorf(
 			"create log parent directory: %w",
 			err,
@@ -96,7 +100,10 @@ func create(
 		runID,
 	)
 
-	if err := os.Mkdir(absoluteDirectory, 0o755); err != nil {
+	if err := os.Mkdir(
+		absoluteDirectory,
+		0o755,
+	); err != nil {
 		return nil, fmt.Errorf(
 			"create run log directory: %w",
 			err,
@@ -117,7 +124,10 @@ func newRunID(
 ) (string, error) {
 	var entropy [entropySize]byte
 
-	if _, err := io.ReadFull(random, entropy[:]); err != nil {
+	if _, err := io.ReadFull(
+		random,
+		entropy[:],
+	); err != nil {
 		return "", fmt.Errorf(
 			"generate run identifier entropy: %w",
 			err,
@@ -149,6 +159,15 @@ func (store *Store) StageCombinedPath(
 	return path.Join(
 		store.relativeDirectory,
 		stageID+".combined.log",
+	)
+}
+
+func (store *Store) ArtifactPath(
+	name string,
+) string {
+	return path.Join(
+		store.relativeDirectory,
+		name,
 	)
 }
 
@@ -190,7 +209,10 @@ func (store *Store) Observe(
 			)
 		}
 
-		if err := writeAll(streamFile, event.Data); err != nil {
+		if err := writeAll(
+			streamFile,
+			event.Data,
+		); err != nil {
 			return fmt.Errorf(
 				"write stage %q %s log: %w",
 				event.StageID,
@@ -199,7 +221,10 @@ func (store *Store) Observe(
 			)
 		}
 
-		if err := writeAll(files.combined, event.Data); err != nil {
+		if err := writeAll(
+			files.combined,
+			event.Data,
+		); err != nil {
 			return fmt.Errorf(
 				"write stage %q combined log: %w",
 				event.StageID,
@@ -209,6 +234,82 @@ func (store *Store) Observe(
 	}
 
 	return nil
+}
+
+func (store *Store) WriteArtifact(
+	name string,
+	data []byte,
+) (string, error) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+
+	if store.closed {
+		return "", errors.New(
+			"run log store is closed",
+		)
+	}
+
+	if err := validateArtifactName(name); err != nil {
+		return "", err
+	}
+
+	absolutePath := filepath.Join(
+		store.absoluteDirectory,
+		name,
+	)
+
+	file, err := os.OpenFile(
+		absolutePath,
+		os.O_WRONLY|os.O_CREATE|os.O_EXCL,
+		0o644,
+	)
+	if err != nil {
+		return "", fmt.Errorf(
+			"create run artifact %q: %w",
+			name,
+			err,
+		)
+	}
+
+	complete := false
+
+	defer func() {
+		if !complete {
+			_ = os.Remove(absolutePath)
+		}
+	}()
+
+	if err := writeAll(file, data); err != nil {
+		_ = file.Close()
+
+		return "", fmt.Errorf(
+			"write run artifact %q: %w",
+			name,
+			err,
+		)
+	}
+
+	if err := file.Sync(); err != nil {
+		_ = file.Close()
+
+		return "", fmt.Errorf(
+			"synchronize run artifact %q: %w",
+			name,
+			err,
+		)
+	}
+
+	if err := file.Close(); err != nil {
+		return "", fmt.Errorf(
+			"close run artifact %q: %w",
+			name,
+			err,
+		)
+	}
+
+	complete = true
+
+	return store.ArtifactPath(name), nil
 }
 
 func (store *Store) Close() error {
@@ -226,9 +327,21 @@ func (store *Store) Close() error {
 	for stageID, files := range store.stages {
 		result = errors.Join(
 			result,
-			closeFile(stageID, "stdout", files.stdout),
-			closeFile(stageID, "stderr", files.stderr),
-			closeFile(stageID, "combined", files.combined),
+			closeFile(
+				stageID,
+				"stdout",
+				files.stdout,
+			),
+			closeFile(
+				stageID,
+				"stderr",
+				files.stderr,
+			),
+			closeFile(
+				stageID,
+				"combined",
+				files.combined,
+			),
 		)
 	}
 
@@ -254,6 +367,7 @@ func (store *Store) ensureStage(
 	)
 	if err != nil {
 		_ = stdout.Close()
+
 		return nil, err
 	}
 
@@ -263,6 +377,7 @@ func (store *Store) ensureStage(
 	if err != nil {
 		_ = stdout.Close()
 		_ = stderr.Close()
+
 		return nil, err
 	}
 
@@ -281,7 +396,10 @@ func (store *Store) createFile(
 	name string,
 ) (*os.File, error) {
 	file, err := os.OpenFile(
-		filepath.Join(store.absoluteDirectory, name),
+		filepath.Join(
+			store.absoluteDirectory,
+			name,
+		),
 		os.O_WRONLY|os.O_CREATE|os.O_EXCL,
 		0o644,
 	)
@@ -294,6 +412,21 @@ func (store *Store) createFile(
 	}
 
 	return file, nil
+}
+
+func validateArtifactName(name string) error {
+	if name == "" ||
+		name == "." ||
+		name == ".." ||
+		filepath.Base(name) != name ||
+		strings.ContainsAny(name, `/\`) {
+		return fmt.Errorf(
+			"invalid run artifact name %q",
+			name,
+		)
+	}
+
+	return nil
 }
 
 func writeAll(

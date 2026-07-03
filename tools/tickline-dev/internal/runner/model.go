@@ -64,6 +64,7 @@ type StageResult struct {
 type RunResult struct {
 	RunID        string
 	LogDirectory string
+	ResultPath   string
 	Status       Status
 	StartedAt    time.Time
 	Duration     time.Duration

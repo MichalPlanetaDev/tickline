@@ -20,6 +20,7 @@ type document struct {
 	DurationMS    int64           `json:"duration_ms"`
 	Interrupted   bool            `json:"interrupted"`
 	LogDirectory  string          `json:"log_directory"`
+	ResultPath    string          `json:"result_path"`
 	Stages        []stageDocument `json:"stages"`
 }
 
@@ -49,7 +50,10 @@ func Write(
 		writer,
 		bytes.NewReader(data),
 	); err != nil {
-		return fmt.Errorf("write JSON report: %w", err)
+		return fmt.Errorf(
+			"write JSON report: %w",
+			err,
+		)
 	}
 
 	return nil
@@ -90,6 +94,7 @@ func Marshal(
 		DurationMS:    result.Duration.Milliseconds(),
 		Interrupted:   result.Status == runner.StatusCancelled,
 		LogDirectory:  result.LogDirectory,
+		ResultPath:    result.ResultPath,
 		Stages:        stages,
 	}
 
