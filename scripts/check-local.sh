@@ -1,62 +1,123 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$ROOT_DIR"
+repository_root="$(
+    cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." &&
+    pwd
+)"
 
-BUILD_DIR="${BUILD_DIR:-build}"
-SANITIZED_BUILD_DIR="${SANITIZED_BUILD_DIR:-build-sanitized}"
-BUILD_TYPE="${BUILD_TYPE:-Debug}"
-SKIP_SANITIZERS="${SKIP_SANITIZERS:-0}"
-SKIP_DOCKER="${SKIP_DOCKER:-0}"
+manifest_path="$repository_root/scripts/checks/manifest.tsv"
 
-require_command() {
-  if ! command -v "$1" >/dev/null 2>&1; then
-    echo "required command not found: $1" >&2
-    exit 1
-  fi
+fail()
+{
+    printf 'check-local: %s\n' "$*" >&2
+    exit 2
 }
 
-run() {
-  echo
-  echo "==> $*"
-  "$@"
-}
+[[ -f "$manifest_path" ]] ||
+    fail "manifest not found: $manifest_path"
 
-require_command git
-require_command cmake
-require_command ctest
-require_command python3
+version_seen=false
+stage_count=0
+started_at=$SECONDS
 
-if [[ "$SKIP_DOCKER" != "1" ]]; then
-  require_command docker
-fi
+printf '%s\n\n' "Tickline local verification"
 
-run git diff --check
+while IFS=$'\t' read -r \
+    record_type \
+    field_1 \
+    field_2 \
+    field_3 \
+    field_4 \
+    field_5 ||
+    [[ -n "${record_type:-}" ]]
+do
+    record_type="${record_type%$'\r'}"
 
-run bash scripts/check-docs.sh
+    if [[ -z "$record_type" || "$record_type" == \#* ]]; then
+        continue
+    fi
 
-run cmake -S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
-run cmake --build "$BUILD_DIR" --parallel
-run ctest --test-dir "$BUILD_DIR" --output-on-failure
+    case "$record_type" in
+        version)
+            if [[ "$version_seen" == true ]]; then
+                fail "manifest contains multiple version records"
+            fi
 
-if [[ "$SKIP_SANITIZERS" != "1" ]]; then
-  run cmake -S . -B "$SANITIZED_BUILD_DIR" -DCMAKE_BUILD_TYPE=Debug -DTICKLINE_ENABLE_SANITIZERS=ON
-  run cmake --build "$SANITIZED_BUILD_DIR" --parallel
-  run ctest --test-dir "$SANITIZED_BUILD_DIR" --output-on-failure
-else
-  echo
-  echo "==> skipping sanitizer build because SKIP_SANITIZERS=1"
-fi
+            [[ "$field_1" == "1" ]] ||
+                fail "unsupported manifest version: $field_1"
 
-run env PYTHONPATH=tools/python python3 -m unittest discover -s tools/python/tests -v
+            version_seen=true
+            ;;
 
-if [[ "$SKIP_DOCKER" != "1" ]]; then
-  run docker build -f infra/docker/Dockerfile .
-else
-  echo
-  echo "==> skipping Docker build because SKIP_DOCKER=1"
-fi
+        stage)
+            [[ "$version_seen" == true ]] ||
+                fail "stage record appears before manifest version"
 
-echo
-echo "local quality gate passed"
+            stage_id="$field_1"
+            stage_label="$field_2"
+            script_path="$field_3"
+            enabled_by_default="$field_4"
+
+            case "$enabled_by_default" in
+                true)
+                    ;;
+                false)
+                    continue
+                    ;;
+                *)
+                    fail \
+                        "stage $stage_id has invalid enabled value: $enabled_by_default"
+                    ;;
+            esac
+
+            absolute_script="$repository_root/$script_path"
+
+            [[ -f "$absolute_script" ]] ||
+                fail "stage $stage_id script not found: $script_path"
+
+            [[ -x "$absolute_script" ]] ||
+                fail "stage $stage_id script is not executable: $script_path"
+
+            stage_count=$((stage_count + 1))
+            stage_started_at=$SECONDS
+
+            printf '[%d] %s\n' "$stage_count" "$stage_label"
+
+            if "$absolute_script"; then
+                stage_duration=$((SECONDS - stage_started_at))
+
+                printf \
+                    '    passed in %ds\n\n' \
+                    "$stage_duration"
+            else
+                exit_code=$?
+                stage_duration=$((SECONDS - stage_started_at))
+
+                printf \
+                    '    failed in %ds with exit code %d\n' \
+                    "$stage_duration" \
+                    "$exit_code" \
+                    >&2
+
+                exit "$exit_code"
+            fi
+            ;;
+
+        *)
+            fail "unknown manifest record type: $record_type"
+            ;;
+    esac
+done < "$manifest_path"
+
+[[ "$version_seen" == true ]] ||
+    fail "manifest does not contain a version record"
+
+((stage_count > 0)) ||
+    fail "manifest contains no enabled stages"
+
+total_duration=$((SECONDS - started_at))
+
+printf '%s\n' "Result: passed"
+printf 'Checks: %d passed\n' "$stage_count"
+printf 'Total: %ds\n' "$total_duration"

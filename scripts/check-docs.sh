@@ -13,6 +13,9 @@ required_files=(
   "docs/debugging-workflow.md"
   "docs/release-process.md"
   "docs/simulation-model.md"
+  "docs/developer-console.md"
+  "docs/decisions/0001-go-developer-console.md"
+  "tools/tickline-dev/README.md"
 )
 
 for file in "${required_files[@]}"; do

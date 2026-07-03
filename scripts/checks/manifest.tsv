@@ -1,0 +1,7 @@
+version	1
+stage	docs	Documentation	scripts/checks/docs.sh	true	
+stage	cpp	C++ build and tests	scripts/checks/cpp.sh	true	docs
+stage	sanitizers	Sanitizers	scripts/checks/sanitizers.sh	true	cpp
+stage	python	Python tests	scripts/checks/python.sh	true	
+stage	go	Go tests and vet	scripts/checks/go.sh	true	
+stage	docker	Docker smoke build	scripts/checks/docker.sh	true	cpp

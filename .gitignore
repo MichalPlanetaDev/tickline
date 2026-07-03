@@ -71,3 +71,5 @@ Thumbs.db
 
 # CMake build trees
 build-*/
+
+reports/check-local/
