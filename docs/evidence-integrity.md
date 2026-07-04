@@ -2,7 +2,7 @@
 
 Tickline treats evidence as a first-class engineering artifact. A validation finding is only useful when it can be reviewed, replayed, and checked for tampering.
 
-This document defines how Tickline evidence should be structured, chained, verified, and later signed. It is a specification for implementation, not a claim that all mechanisms already exist in `v0.1.0`.
+This document defines the implemented `v0.4.0` evidence record, SHA-256 chain, binary archive, trusted-head verification, and deterministic replay model. Digital signatures and key management remain future work.
 
 ## Design goals
 

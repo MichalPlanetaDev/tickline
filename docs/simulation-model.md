@@ -30,7 +30,6 @@ Not implemented:
 - rollback
 - lag compensation
 - multithreaded updates
-- cryptographic evidence hashing
 
 ## Units
 
