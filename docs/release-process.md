@@ -22,9 +22,9 @@ Expected line:
 ```text
 v0.1.0  blueprint and engineering skeleton
 v0.2.0  deterministic simulation core
-v0.3.0  protocol parser and hardening
-v0.4.0  authoritative validation
-v0.5.0  evidence integrity
+v0.3.0  developer console foundation
+v0.4.0  authoritative command pipeline
+v0.5.0  protocol boundary and parser hardening
 v0.6.0  investigation storage and API
 v0.7.0  Unity forensic replay viewer
 v0.8.0  analytics and statistics
@@ -35,7 +35,7 @@ v1.0.0  final portfolio release
 Patch releases may be used for real fixes:
 
 ```text
-v0.3.1  parser boundary bug fix
+v0.4.1  command pipeline bug fix
 v0.5.1  evidence verification correction
 v1.0.1  README or CI fix after final release
 ```
@@ -76,13 +76,16 @@ A release should have one coherent purpose.
 Good release scope:
 
 ```text
-v0.3.0 - Protocol parser and hardening
+v0.4.0 - Authoritative command pipeline
 
 Includes:
-framed parser
-stable parser errors
-malformed-input tests
-parser fuzz target build
+typed command envelope
+stable validation and rejection codes
+session replay protection
+authoritative world admission
+SHA-256 evidence chain
+verified evidence archives
+deterministic forensic replay
 
 Excludes:
 Unity viewer

@@ -1,298 +1,345 @@
 # Tickline
 
-Tickline is a lawful systems/security portfolio project. Its purpose is to demonstrate how a game-security platform can be well designed.
+Tickline is a lawful, defensive security-engineering range built around deterministic authoritative simulation, strict command admission, evidence integrity, forensic replay, and reproducible engineering workflow.
 
-This is not a cheat project, bypass project, malware project, or reverse-engineering target for third-party software. All adversarial testing is performed against owned code inside this repository.
+It is not a cheat project, bypass project, malware project, or reverse-engineering target for third-party software. Adversarial tests operate only against code and artifacts owned by this repository.
 
-## Project thesis
+## Current release
 
-Modern multiplayer security is not a single detector. It is a chain of engineering decisions:
+**v0.4.0 — Authoritative command pipeline**
 
-```text
-client is untrusted
-        ↓
-protocol boundary is explicit
-        ↓
-server owns simulation state
-        ↓
-claims are validated against deterministic rules
-        ↓
-telemetry is structured
-        ↓
-evidence is integrity-protected
-        ↓
-operators can investigate decisions
-        ↓
-runtime behavior is observable and reproducible
-```
+The current C++ core provides:
 
-Tickline is designed to make that chain visible.
+- deterministic fixed-step simulation;
+- integer time, position, and velocity units;
+- stable entity and command ordering;
+- typed command envelopes;
+- client and session identity binding;
+- monotonic per-session replay protection;
+- bounded future-tick admission;
+- authoritative world-level validation;
+- transactional command submission;
+- stable rejection codes;
+- evidence for accepted and rejected submissions;
+- SHA-256-linked evidence records;
+- strict binary evidence archives;
+- verification against an external trusted chain head;
+- deterministic forensic replay.
 
-## Current status
+The repository also includes the Go-based `tickline-dev` verification console, Python support-package scaffolding, Docker checks, sanitizer builds, and GitHub workflow documentation.
 
-Current development release:
+## Security thesis
 
-**v0.2.0 — Deterministic simulation core**
-
-The C++ core now provides fixed-duration ticks, integer simulation units, stable entity ordering, scheduled velocity commands, bounded integration, replayable state, canonical serialization, and deterministic state fingerprints.
-
-Networking, protocol parsing, evidence writing, cryptographic integrity, Unity visualization, and analytics remain outside this release.
-
-## What Tickline is meant to prove
-
-| Area | Proof target |
-|---|---|
-| C++ systems programming | Deterministic simulation core, ownership discipline, parser implementation, tests, sanitizers |
-| C# and Unity | Forensic replay viewer, timeline inspection, debugging UI, managed tooling around native/server data |
-| Game security | Server authority, invalid client claims, timing abuse, replay attempts, malformed protocol input |
-| Protocol engineering | Versioned framed protocol, parser hardening, malformed input handling, fuzzable boundaries |
-| Cryptography | Hash-chained evidence, signed manifests, tamper detection, replay-protection design |
-| Linux | CLI workflow, permissions awareness, process/runtime diagnostics, logs, Docker, service behavior |
-| DevOps | CI/CD quality gates, Docker builds, reproducible commands, release hygiene, GitHub workflow |
-| Networking | TCP/UDP design tradeoffs, framing, ordering, latency windows, timeout behavior, service contracts |
-| Mathematics and physics | Fixed timestep simulation, vectors, ray tests, swept movement, tolerance windows, spatial structures |
-| Data and analytics | Structured telemetry, SQL queries, statistical summaries, anomaly analysis, false-positive discussion |
-| Security engineering | Threat model, safe adversarial testing, defensive scope, evidence review, no offensive tooling |
-| Professional workflow | Issues, labels, milestones, branches, PR-style changes, changelog, release notes, documentation |
-
-## Intended architecture
+Tickline models this trust chain:
 
 ```text
-+--------------------+        +-------------------------+
-| Controlled clients | -----> | Protocol boundary       |
-| Unity / bots       |        | framing + validation    |
-+--------------------+        +-----------+-------------+
-                                          |
-                                          v
-                              +-----------+-------------+
-                              | C++ authoritative core  |
-                              | deterministic ticks     |
-                              | physics + validation    |
-                              +-----------+-------------+
-                                          |
-                                          v
-                              +-----------+-------------+
-                              | Evidence pipeline       |
-                              | telemetry + hash chain  |
-                              | signed artifacts        |
-                              +-----------+-------------+
-                                          |
-                    +---------------------+---------------------+
-                    |                                           |
-                    v                                           v
-        +-----------+-------------+                 +-----------+-------------+
-        | Investigation storage   |                 | Runtime diagnostics     |
-        | SQLite / later service  |                 | logs, metrics, traces   |
-        +-----------+-------------+                 +-----------+-------------+
-                    |                                           |
-                    v                                           v
-        +-----------+-------------+                 +-----------+-------------+
-        | Python analytics tools  |                 | Linux / Docker / CI     |
-        | reports + statistics    |                 | reproducible workflow   |
-        +-----------+-------------+                 +-------------------------+
-                    |
-                    v
-        +-----------+-------------+
-        | Unity forensic viewer   |
-        | replay + timeline UI    |
-        +-------------------------+
+client input is untrusted
+        |
+        v
+typed command boundary
+        |
+        v
+identity, schema, sequence, timing, and payload validation
+        |
+        v
+authoritative world admission
+        |
+        v
+deterministic simulation state
+        |
+        v
+canonical evidence record
+        |
+        v
+SHA-256 evidence chain
+        |
+        v
+verified binary archive
+        |
+        v
+deterministic forensic replay
 ```
 
-The central rule is that the server owns truth. Clients may request actions, but they do not authoritatively decide movement, hits, timing, or evidence.
+A client may request an action. It does not authoritatively decide simulation state, validation results, or evidence.
 
-## Engineering boundaries
+## Implemented components
 
-Tickline is allowed to include:
+### Deterministic simulation
+
+The C++ simulation core supports:
+
+- fixed-duration ticks;
+- checked elapsed-time progression;
+- non-zero entity identifiers;
+- integer millimeter and microsecond units;
+- scheduled velocity commands;
+- per-entity sequence and target-tick tracking;
+- bounded velocity and position;
+- fractional displacement preservation;
+- atomic world advancement;
+- canonical state encoding;
+- deterministic state fingerprints.
+
+The state fingerprint is intended for deterministic comparison and replay checks. It is not a cryptographic authentication mechanism.
+
+### Command envelope and validation
+
+Each command envelope carries:
+
+- command schema version;
+- command type;
+- client identifier;
+- session identifier;
+- session sequence;
+- target simulation tick;
+- entity identifier;
+- typed velocity payload.
+
+The stateless validator rejects unsupported schemas and command types, invalid or mismatched identities, zero sequences, stale ticks, excessive future ticks, and out-of-range velocity.
+
+### Session replay protection
+
+A `CommandSession` owns the highest accepted sequence for one authenticated client/session pair.
+
+It distinguishes:
+
+- duplicate sequence;
+- sequence regression;
+- valid strictly increasing sequence.
+
+Sequence gaps are allowed. A sequence is committed only after authoritative world admission succeeds.
+
+### Authoritative submission pipeline
+
+`AuthoritativeCommandPipeline` coordinates:
+
+1. session-level validation;
+2. replay checks;
+3. translation into a simulation command;
+4. authoritative world admission;
+5. session-sequence commit;
+6. evidence generation.
+
+A rejected submission does not commit session replay state. World-level rejections do not consume a session sequence.
+
+### Evidence integrity
+
+Every submission produces a fixed-size canonical evidence record, including rejected submissions.
+
+Evidence records contain:
+
+- pre-submission world fingerprint;
+- observed simulation tick;
+- full command envelope;
+- session sequence before and after;
+- pending-command count before and after;
+- stable rejection code;
+- raw queue outcome.
+
+Records are linked with SHA-256. Verification requires an independently trusted expected chain head.
+
+The chain detects modification relative to that trusted head. It does not prove who produced the archive and is not a digital signature.
+
+### Evidence archives
+
+The binary archive format provides:
+
+- archive magic and schema;
+- embedded record schema and size;
+- record count;
+- declared SHA-256 chain head;
+- fixed-size canonical records;
+- exact-length validation;
+- truncation detection;
+- trailing-data rejection;
+- strict record decoding;
+- chain verification;
+- trusted-head comparison.
+
+### Forensic replay
+
+The evidence replayer accepts:
+
+- a trusted initial `CommandSession`;
+- a trusted initial `World`;
+- verified evidence records;
+- a trusted evidence-chain head.
+
+It reconstructs observed tick progression and command submission, then compares regenerated records with archived records.
+
+Replay detects:
+
+- invalid chain linkage;
+- tick regression;
+- excessive replay work;
+- simulation-advance failure;
+- initial-session mismatch;
+- pending-command mismatch;
+- world-state mismatch;
+- forged submission outcomes.
+
+## Important limitations
+
+The current release does not provide:
+
+- a network server;
+- TCP or UDP framing;
+- a byte-level protocol parser;
+- transport authentication;
+- encryption;
+- digital signatures;
+- key management;
+- crash-consistent append-only evidence storage;
+- concurrent session registry;
+- database ingestion;
+- Unity visualization;
+- collision or hit validation;
+- production anti-cheat deployment.
+
+`CommandEnvelope` is currently an in-process typed boundary. It is not yet decoded from untrusted network bytes.
+
+Evidence verification proves consistency with a trusted SHA-256 head. It does not establish origin or legal attribution.
+
+## Repository layout
 
 ```text
-owned-code adversarial testing
-malformed packet tests
-parser fuzzing
-protocol replay tests
-server-side validation
-hash-chain tamper detection
-signed local artifacts
-Dockerized local runtime
-Linux debugging notes
-CI quality gates
-Unity forensic visualization
-Python statistical analysis
-technical writeups
+cpp/
+  include/tickline/
+    command/
+    security/
+    simulation/
+  src/
+  tests/
+
+docs/
+  decisions/
+  releases/
+
+infra/
+  docker/
+
+scripts/
+  checks/
+
+tools/
+  python/
+  tickline-dev/
+
+unity-viewer/
 ```
 
-Tickline must not include:
+## Local verification
 
-```text
-cheat loaders
-bypass tooling
-DLL injection against third-party games
-kernel evasion
-DMA tooling
-credential theft
-malware
-live-service targeting
-real anti-cheat bypass research
-instructions for evading production security systems
+Run the complete repository gate:
+
+```bash
+bash scripts/check-local.sh
 ```
 
-The project is defensive by design.
+Run a faster local pass:
+
+```bash
+SKIP_SANITIZERS=1 SKIP_DOCKER=1 \
+  bash scripts/check-local.sh
+```
+
+Build and test only the C++ core:
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build --parallel
+ctest --test-dir build --output-on-failure
+```
+
+Run the sanitizer configuration:
+
+```bash
+cmake \
+  -S . \
+  -B build-sanitized \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DTICKLINE_ENABLE_SANITIZERS=ON
+
+cmake --build build-sanitized --parallel
+ctest --test-dir build-sanitized --output-on-failure
+```
+
+Build the developer console:
+
+```bash
+bash scripts/build-tickline-dev.sh
+```
+
+## Developer console
+
+`tickline-dev` provides one execution engine for:
+
+- plain terminal output;
+- versioned JSON reports;
+- interactive terminal UI;
+- dependency-aware stage selection;
+- process-group cancellation;
+- per-stage logs;
+- canonical `result.json` artifacts.
+
+Examples:
+
+```bash
+tickline-dev version
+tickline-dev check --plan
+tickline-dev check --plain
+tickline-dev check --json
+tickline-dev check --only cpp,go
+```
+
+## Release history
+
+| Version | Milestone | Delivered scope |
+|---|---|---|
+| `v0.1.0` | Blueprint and engineering skeleton | Repository structure, architecture, threat model, CI and workflow foundation |
+| `v0.1.1` | Local workflow and CI repair | Reproducible local checks and corrected CI behavior |
+| `v0.2.0` | Deterministic simulation core | Fixed ticks, integer state, scheduled commands, canonical state and tests |
+| `v0.3.0` | Developer console foundation | Go verification console, shared manifest, TUI, JSON reports, cancellation and logs |
+| `v0.4.0` | Authoritative command pipeline | Command admission, replay protection, evidence archives, SHA-256 chain and forensic replay |
 
 ## Planned milestones
 
-| Version | Milestone | Scope |
+| Version | Milestone | Intended scope |
 |---|---|---|
-| `v0.1.0` | Blueprint and engineering skeleton | Repository structure, docs, CI skeleton, GitHub workflow |
-| `v0.2.0` | C++ deterministic simulation core | Fixed ticks, state model, replayable simulation, tests |
-| `v0.3.0` | Protocol parser and hardening | Framing, versioning, malformed input tests, fuzz target |
-| `v0.4.0` | Authoritative validation | Movement, timing, sequence, physics and state validation |
-| `v0.5.0` | Evidence integrity | Hash-chained telemetry, signed manifests, tamper checks |
-| `v0.6.0` | Investigation storage and API | SQLite schema, service contracts, query layer, health checks |
-| `v0.7.0` | Unity forensic replay viewer | Timeline replay, state inspection, evidence visualization |
-| `v0.8.0` | Analytics and statistics | Python reports, baselines, outlier scoring, false-positive analysis |
-| `v0.9.0` | Runtime diagnostics and hardening | Docker, Linux diagnostics, sanitizer/fuzz workflow, observability notes |
-| `v1.0.0` | Final portfolio release | Screenshots, release notes, documentation freeze, reproducible demo |
+| `v0.5.0` | Protocol boundary and parser hardening | Framing, bounded decoding, malformed-input tests and fuzz target |
+| `v0.6.0` | Investigation storage and query layer | SQLite schema, import path, queries and service contracts |
+| `v0.7.0` | Unity forensic replay viewer | Timeline replay, state inspection and evidence visualization |
+| `v0.8.0` | Analytics and statistics | Python reports, baselines, outlier analysis and false-positive review |
+| `v0.9.0` | Runtime diagnostics and service hardening | Docker runtime, diagnostics, observability and operational failure tests |
+| `v1.0.0` | Portfolio release | Reproducible demonstration, screenshots, documentation freeze and final review |
 
-The roadmap may be refined, but features should not be added only because they sound impressive. Every milestone must strengthen the system.
+The roadmap is subordinate to verified implementation. Features are not considered delivered until code, tests, documentation, and release metadata agree.
 
-## GitHub workflow
+## Documentation
 
-Expected workflow:
+- `docs/architecture.md` — current system boundaries and component responsibilities;
+- `docs/simulation-model.md` — deterministic world and command execution model;
+- `docs/authoritative-command-pipeline.md` — command envelope, validation, submission, evidence, and replay;
+- `docs/evidence-integrity.md` — record chain and archive integrity model;
+- `docs/protocol.md` — planned network protocol boundary;
+- `docs/threat-model.md` — defensive scope and trust assumptions;
+- `docs/developer-console.md` — Go verification-console architecture;
+- `docs/debugging-workflow.md` — local diagnosis workflow;
+- `docs/github-workflow.md` — issue, branch, review, and release workflow;
+- `docs/release-process.md` — release invariants and exact release procedure;
+- `docs/releases/v0.4.0.md` — release notes for the current milestone.
 
-```text
-issue defines scoped work
-branch implements one coherent change
-commit message describes the engineering change
-CI validates the branch
-pull request records review context
-merge preserves clean history
-tag marks a release boundary
-release notes explain what changed and why
-```
+## Defensive scope
 
-Branch examples:
+Permitted work includes:
 
-```text
-docs/project-identity
-docs/threat-model
-feature/cpp-simulation-core
-feature/protocol-parser
-hardening/parser-fuzz-target
-infra/docker-runtime
-```
+- malformed-input testing against Tickline;
+- replay and sequence-abuse tests;
+- invalid command claims;
+- evidence-tampering tests;
+- deterministic replay verification;
+- sanitizer and fuzz testing;
+- local Docker and Linux diagnostics;
+- defensive technical documentation.
 
-Commit examples:
-
-```text
-Define Tickline project identity
-Add architecture and trust-boundary documentation
-Implement deterministic tick simulation
-Add protocol parser malformed-input tests
-Add hash-chain evidence verification
-```
-
-## Local workflow
-
-The main local verification command is:
-
-    bash scripts/check-local.sh
-
-It runs the same baseline checks expected from the early project:
-
-- documentation sanity check
-- CMake configure
-- C++ build
-- CTest
-- sanitizer build
-- Python unittest discovery
-- Docker smoke image build
-
-For a faster local pass during small edits:
-
-    SKIP_SANITIZERS=1 SKIP_DOCKER=1 bash scripts/check-local.sh
-
-If `just` is installed, the same workflow is available as:
-
-    just check
-    just check-fast
-    just clean
-
-The script is the source of truth. Long manual command chains should not be copied around unless a failure is being isolated.
-
-## Quality gates
-
-The final project should include quality gates for:
-
-```text
-CMake configure
-C++ build
-C++ tests
-clang-format
-clang-tidy where practical
-AddressSanitizer
-UndefinedBehaviorSanitizer
-parser fuzz target build
-Python tests
-documentation sanity checks
-Docker build
-Docker smoke test
-```
-
-Quality gates should be useful, not decorative. A failing gate must indicate a real engineering problem.
-
-## Development environment
-
-Primary target environment:
-
-```text
-Linux / WSL2
-C++23
-CMake
-Ninja
-Python 3
-Docker
-GitHub CLI
-Unity LTS or current stable Unity editor for the viewer
-```
-
-The repository should remain buildable from a clean checkout once implementation begins.
-
-## Documentation map
-
-Planned documentation:
-
-| Document | Purpose |
-|---|---|
-| `docs/architecture.md` | System design, component boundaries, data flow, trust boundaries |
-| `docs/simulation-model.md` | Deterministic units, tick behavior, command ordering, canonical state, and failure guarantees |
-| `docs/developer-console.md` | Developer-console task model, execution boundaries, output contracts, and terminal policy |
-| `docs/decisions/0001-go-developer-console.md` | Decision to use Go and Bubble Tea over a shared check execution model |
-| `docs/threat-model.md` | Assets, attackers, abuse cases, prohibited scope, defensive constraints |
-| `docs/protocol.md` | Framing, message format, parser behavior, versioning, malformed input handling |
-| `docs/evidence-integrity.md` | Hash chain, artifact signing, tamper detection, evidence limitations |
-| `docs/github-workflow.md` | Issues, labels, branches, PRs, commits, releases, hotfixes, bisect/revert rules |
-| `docs/debugging-workflow.md` | Linux diagnostics, logs, process inspection, sanitizer output, failure triage |
-| `docs/release-process.md` | Release checklist, tags, changelog, screenshots, demo verification |
-| `SECURITY.md` | Safe-use policy and vulnerability reporting boundary |
-| `CHANGELOG.md` | Versioned release history grounded in Git history |
-
-## Review path
-
-At `v1.0.0`, a reviewer should be able to:
-
-```text
-read the README and understand the system
-inspect the architecture and threat model
-run the local demo
-see CI passing
-inspect tests and sanitizer configuration
-review evidence-integrity behavior
-open the Unity forensic viewer
-read release notes
-understand what is intentionally out of scope
-```
-
-The intended impression is not breadth for its own sake. The intended impression is disciplined engineering across security, simulation, runtime, tooling, and evidence.
-
-## License
-
-MIT.
+The repository must not include malware, credential theft, third-party game targeting, commercial anti-cheat bypasses, stealth persistence, kernel evasion, DMA tooling, or instructions for attacking production services.

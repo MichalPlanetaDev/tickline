@@ -23,7 +23,7 @@ go -C "$module_directory" build \
     -o "$output_path" \
     ./cmd/tickline-dev
 
-expected_version="tickline-dev 0.3.0"
+expected_version="tickline-dev 0.4.0"
 actual_version="$("$output_path" version)"
 
 if [[ "$actual_version" != "$expected_version" ]]; then
