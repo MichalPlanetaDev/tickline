@@ -61,6 +61,7 @@ add_library(
     cpp/src/command/authoritative_command_pipeline.cpp
     cpp/src/command/command_evidence.cpp
     cpp/src/command/command_evidence_archive.cpp
+    cpp/src/command/command_evidence_replay.cpp
     cpp/src/command/command_session.cpp
     cpp/src/command/command_validator.cpp
     cpp/src/security/sha256.cpp
@@ -149,6 +150,11 @@ tickline_add_test(
 tickline_add_test(
     tickline_command_evidence_archive_tests
     cpp/tests/command_evidence_archive_tests.cpp
+)
+
+tickline_add_test(
+    tickline_command_evidence_replay_tests
+    cpp/tests/command_evidence_replay_tests.cpp
 )
 
 tickline_add_test(
