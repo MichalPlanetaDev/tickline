@@ -139,7 +139,7 @@ fuzzable parser surface
 
 The protocol boundary must not silently repair hostile or malformed input. It should reject invalid data early, classify why it was rejected, and emit evidence when appropriate.
 
-Planned parser properties:
+Implemented parser properties:
 
 ```text
 bounded reads
@@ -149,7 +149,15 @@ no unchecked integer conversions
 no trust in client-provided timestamps
 no trust in client-provided object state
 stable error codes for investigation
+strict rejection of truncated and trailing bytes
+fixed-size big-endian command-envelope decoding
 ```
+
+The current `AuthoritativeCommandGateway` connects complete parsed commands to
+the existing command pipeline. Parser failures do not mutate session or world
+state and are kept distinct from authoritative command rejections.
+
+Incremental stream reassembly, compatibility tests, a libFuzzer target, and a committed regression corpus are implemented. Socket ownership, connection policy, and protocol-level malformed-frame evidence remain separate work.
 
 ### Simulation and validation layer
 

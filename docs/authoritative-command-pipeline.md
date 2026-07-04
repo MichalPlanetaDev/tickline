@@ -29,8 +29,10 @@ payload
 The current payload is `SetVelocityPayload`, containing an entity identifier
 and two-dimensional integer velocity.
 
-The envelope is currently a typed in-process boundary. It is not yet decoded
-from network bytes.
+The protocol layer now decodes a fixed 60-byte big-endian wire payload into
+this envelope. Structural parsing remains separate from authoritative
+validation; unsupported command schema and type values are preserved for the
+validator to reject with command-level evidence.
 
 ## Stateless validation
 
@@ -161,7 +163,7 @@ or the correct external head.
 
 `v0.4.0` does not provide:
 
-- network framing or byte parsing;
+- socket transport and connection lifecycle;
 - transport authentication;
 - encryption;
 - digital signatures;

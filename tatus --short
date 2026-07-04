@@ -1,0 +1,30 @@
+ CMakeLists.txt                                         |  92 [32m+++[m
+ cpp/fuzz/corpus/protocol_parser/invalid-magic.bin      | Bin [31m0[m -> [32m76[m bytes
+ cpp/fuzz/corpus/protocol_parser/oversized-frame.bin    | Bin [31m0[m -> [32m16[m bytes
+ cpp/fuzz/corpus/protocol_parser/trailing-data.bin      | Bin [31m0[m -> [32m77[m bytes
+ cpp/fuzz/corpus/protocol_parser/truncated-frame.bin    | Bin [31m0[m -> [32m75[m bytes
+ cpp/fuzz/corpus/protocol_parser/truncated-header.bin   | Bin [31m0[m -> [32m8[m bytes
+ cpp/fuzz/corpus/protocol_parser/valid-command.bin      | Bin [31m0[m -> [32m76[m bytes
+ cpp/fuzz/corpus/protocol_parser/zero-entity.bin        | Bin [31m0[m -> [32m76[m bytes
+ cpp/fuzz/protocol_parser_fuzz.cpp                      |  38 [32m+[m
+ .../protocol/authoritative_command_gateway.hpp         |  58 [32m++[m
+ .../tickline/protocol/command_envelope_codec.hpp       |  39 [32m+[m
+ cpp/include/tickline/protocol/frame.hpp                | 110 [32m+++[m
+ cpp/include/tickline/protocol/frame_parser.hpp         |  25 [32m+[m
+ cpp/include/tickline/protocol/stream_parser.hpp        |  60 [32m++[m
+ cpp/src/protocol/authoritative_command_gateway.cpp     | 113 [32m+++[m
+ cpp/src/protocol/command_envelope_codec.cpp            | 202 [32m++++++[m
+ cpp/src/protocol/frame_parser.cpp                      | 139 [32m++++[m
+ cpp/src/protocol/stream_parser.cpp                     | 162 [32m+++++[m
+ cpp/tests/authoritative_command_gateway_tests.cpp      | 328 [32m+++++++++[m
+ cpp/tests/command_envelope_codec_tests.cpp             | 228 [32m++++++[m
+ cpp/tests/protocol_compatibility_tests.cpp             | 190 [32m+++++[m
+ cpp/tests/protocol_frame_parser_tests.cpp              | 349 [32m+++++++++[m
+ cpp/tests/protocol_fuzz_corpus_tests.cpp               | 141 [32m++++[m
+ cpp/tests/protocol_stream_parser_tests.cpp             | 320 [32m++++++++[m
+ docs/architecture.md                                   |  10 [32m+[m[31m-[m
+ docs/authoritative-command-pipeline.md                 |   8 [32m+[m[31m-[m
+ docs/protocol-compatibility.md                         | 113 [32m+++[m
+ docs/protocol.md                                       | 847 [32m++++++[m[31m----------------[m
+ docs/threat-model.md                                   |   7 [32m+[m
+ 29 files changed, 2967 insertions(+), 612 deletions(-)
