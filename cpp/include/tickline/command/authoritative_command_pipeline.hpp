@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tickline/command/command_evidence.hpp"
 #include "tickline/command/command_session.hpp"
 #include "tickline/simulation/world.hpp"
 
@@ -63,7 +64,13 @@ public:
     [[nodiscard]] CommandSubmissionResult submit(
         CommandSession& session,
         simulation::World& world,
-        const CommandEnvelope& command) const;
+        const CommandEnvelope& command);
+
+    [[nodiscard]] const CommandEvidenceLog&
+    evidence() const noexcept;
+
+private:
+    CommandEvidenceLog evidence_;
 };
 
 }

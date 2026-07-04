@@ -59,6 +59,7 @@ endif()
 add_library(
     tickline_core
     cpp/src/command/authoritative_command_pipeline.cpp
+    cpp/src/command/command_evidence.cpp
     cpp/src/command/command_session.cpp
     cpp/src/command/command_validator.cpp
     cpp/src/simulation/canonical_state.cpp
@@ -207,4 +208,22 @@ target_link_libraries(
 add_test(
     NAME tickline_authoritative_command_pipeline_tests
     COMMAND tickline_authoritative_command_pipeline_tests
+)
+
+add_executable(
+    tickline_command_evidence_tests
+    cpp/tests/command_evidence_tests.cpp
+)
+
+target_link_libraries(
+    tickline_command_evidence_tests
+    PRIVATE
+        tickline_core
+        tickline_project_options
+        tickline_project_warnings
+)
+
+add_test(
+    NAME tickline_command_evidence_tests
+    COMMAND tickline_command_evidence_tests
 )

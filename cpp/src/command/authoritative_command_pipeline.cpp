@@ -1,9 +1,28 @@
 #include "tickline/command/authoritative_command_pipeline.hpp"
 
+#include "tickline/simulation/canonical_state.hpp"
+
+#include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <stdexcept>
+#include <utility>
 
 namespace tickline::command {
+namespace {
+
+[[nodiscard]] std::uint64_t checked_count(
+    const std::size_t value)
+{
+    if (!std::in_range<std::uint64_t>(value)) {
+        throw std::overflow_error{
+            "command count cannot be represented in evidence"};
+    }
+
+    return static_cast<std::uint64_t>(value);
+}
+
+} // namespace
 
 CommandSubmissionResult CommandSubmissionResult::reject(
     const CommandRejectionCode code)
@@ -72,15 +91,53 @@ CommandSubmissionResult::CommandSubmissionResult(
 CommandSubmissionResult AuthoritativeCommandPipeline::submit(
     CommandSession& session,
     simulation::World& world,
-    const CommandEnvelope& command) const
+    const CommandEnvelope& command)
 {
+    evidence_.prepare_append();
+
+    const auto observed_tick =
+        world.current_tick().index;
+
+    const auto world_fingerprint_before =
+        simulation::fingerprint_world_state(world);
+
+    const auto session_sequence_before =
+        session.highest_accepted_sequence();
+
+    const auto pending_commands_before =
+        checked_count(
+            world.pending_command_count());
+
     const auto admission = session.evaluate(
         command,
-        world.current_tick().index);
+        observed_tick);
 
     if (!admission.accepted()) {
-        return CommandSubmissionResult::reject(
-            admission.code());
+        auto result =
+            CommandSubmissionResult::reject(
+                admission.code());
+
+        evidence_.append(
+            CommandEvidenceEntry{
+                .world_fingerprint_before =
+                    world_fingerprint_before,
+                .observed_tick = observed_tick,
+                .envelope = command,
+                .session_sequence_before =
+                    session_sequence_before,
+                .session_sequence_after =
+                    session.highest_accepted_sequence(),
+                .pending_commands_before =
+                    pending_commands_before,
+                .pending_commands_after =
+                    checked_count(
+                        world.pending_command_count()),
+                .rejection_code = result.code(),
+                .queue_outcome =
+                    CommandQueueOutcome::not_attempted,
+            });
+
+        return result;
     }
 
     if (!admission.command().has_value()) {
@@ -91,16 +148,42 @@ CommandSubmissionResult AuthoritativeCommandPipeline::submit(
     const auto queue_result = world.queue_velocity(
         admission.command().value());
 
-    auto submission =
+    auto result =
         CommandSubmissionResult::from_queue_result(
             queue_result);
 
-    if (submission.accepted()) {
+    if (result.accepted()) {
         session.commit_accepted_sequence(
             command.sequence);
     }
 
-    return submission;
+    evidence_.append(
+        CommandEvidenceEntry{
+            .world_fingerprint_before =
+                world_fingerprint_before,
+            .observed_tick = observed_tick,
+            .envelope = command,
+            .session_sequence_before =
+                session_sequence_before,
+            .session_sequence_after =
+                session.highest_accepted_sequence(),
+            .pending_commands_before =
+                pending_commands_before,
+            .pending_commands_after =
+                checked_count(
+                    world.pending_command_count()),
+            .rejection_code = result.code(),
+            .queue_outcome =
+                command_queue_outcome(queue_result),
+        });
+
+    return result;
+}
+
+const CommandEvidenceLog&
+AuthoritativeCommandPipeline::evidence() const noexcept
+{
+    return evidence_;
 }
 
 }
