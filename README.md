@@ -6,25 +6,9 @@ It is not a cheat project, bypass project, malware project, or reverse-engineeri
 
 ## Current release
 
-**v0.4.0 — Authoritative command pipeline**
+**v0.5.0 — Protocol boundary and parser hardening**
 
-The current C++ core provides:
-
-- deterministic fixed-step simulation;
-- integer time, position, and velocity units;
-- stable entity and command ordering;
-- typed command envelopes;
-- client and session identity binding;
-- monotonic per-session replay protection;
-- bounded future-tick admission;
-- authoritative world-level validation;
-- transactional command submission;
-- stable rejection codes;
-- evidence for accepted and rejected submissions;
-- SHA-256-linked evidence records;
-- strict binary evidence archives;
-- verification against an external trusted chain head;
-- deterministic forensic replay.
+The current C++ core now includes deterministic authoritative simulation, typed command admission, replay protection, SHA-256-linked evidence, verified evidence archives, deterministic forensic replay, strict 32-byte big-endian frame decoding, bounded command-envelope deserialization, stable parser errors, incremental stream reassembly, compatibility tests, malformed-input regression coverage, and a libFuzzer target.
 
 The repository also includes the Go-based `tickline-dev` verification console, Python support-package scaffolding, Docker checks, sanitizer builds, and GitHub workflow documentation.
 
@@ -33,7 +17,13 @@ The repository also includes the Go-based `tickline-dev` verification console, P
 Tickline models this trust chain:
 
 ```text
-client input is untrusted
+untrusted byte stream
+        |
+        v
+bounded frame reassembly
+        |
+        v
+strict frame and payload decoding
         |
         v
 typed command boundary
@@ -182,23 +172,19 @@ Replay detects:
 
 The current release does not provide:
 
-- a network server;
-- TCP or UDP framing;
-- a byte-level protocol parser;
-- transport authentication;
-- encryption;
-- digital signatures;
-- key management;
+- a production TCP or UDP server;
+- socket lifecycle or connection management;
+- authenticated sessions;
+- transport encryption;
+- digital signatures or key management;
 - crash-consistent append-only evidence storage;
-- concurrent session registry;
+- a concurrent session registry;
 - database ingestion;
 - Unity visualization;
 - collision or hit validation;
 - production anti-cheat deployment.
 
-`CommandEnvelope` is currently an in-process typed boundary. It is not yet decoded from untrusted network bytes.
-
-Evidence verification proves consistency with a trusted SHA-256 head. It does not establish origin or legal attribution.
+The protocol parser secures the owned byte boundary. It does not authenticate clients, encrypt traffic, sign evidence, or establish producer attribution.
 
 ## Repository layout
 
@@ -301,12 +287,12 @@ tickline-dev check --only cpp,go
 | `v0.2.0` | Deterministic simulation core | Fixed ticks, integer state, scheduled commands, canonical state and tests |
 | `v0.3.0` | Developer console foundation | Go verification console, shared manifest, TUI, JSON reports, cancellation and logs |
 | `v0.4.0` | Authoritative command pipeline | Command admission, replay protection, evidence archives, SHA-256 chain and forensic replay |
+| `v0.5.0` | Protocol boundary and parser hardening | Strict framing, bounded decoding, incremental stream parsing, malformed-input tests and fuzzing |
 
 ## Planned milestones
 
 | Version | Milestone | Intended scope |
 |---|---|---|
-| `v0.5.0` | Protocol boundary and parser hardening | Framing, bounded decoding, malformed-input tests and fuzz target |
 | `v0.6.0` | Investigation storage and query layer | SQLite schema, import path, queries and service contracts |
 | `v0.7.0` | Unity forensic replay viewer | Timeline replay, state inspection and evidence visualization |
 | `v0.8.0` | Analytics and statistics | Python reports, baselines, outlier analysis and false-positive review |
@@ -321,7 +307,7 @@ The roadmap is subordinate to verified implementation. Features are not consider
 - `docs/simulation-model.md` — deterministic world and command execution model;
 - `docs/authoritative-command-pipeline.md` — command envelope, validation, submission, evidence, and replay;
 - `docs/evidence-integrity.md` — record chain and archive integrity model;
-- `docs/protocol.md` — planned network protocol boundary;
+- `docs/protocol.md` — implemented framing, decoding, stream parsing, and compatibility rules;
 - `docs/threat-model.md` — defensive scope and trust assumptions;
 - `docs/developer-console.md` — Go verification-console architecture;
 - `docs/debugging-workflow.md` — local diagnosis workflow;
