@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0] - 2026-07-04
+
+### Added
+
+- Strict fixed-header binary protocol framing and command-envelope decoding.
+- Bounded incremental stream parsing with stable errors.
+- Authoritative gateway integration, compatibility tests, malformed-input regression coverage, and a libFuzzer target.
+
+### Limitations
+
+- Production networking, authentication, encryption, signatures, durable investigation storage, and Unity visualization remain out of scope.
+
 ## v0.2.0 - Deterministic simulation core
 
 Introduces the deterministic C++23 reference simulation used by later protocol, validation, replay, and concurrency work.
