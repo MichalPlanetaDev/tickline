@@ -10,6 +10,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <span>
+#include <stdexcept>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -118,6 +120,32 @@ struct CommandEvidenceRecord final {
         const CommandEvidenceRecord&) noexcept = default;
 };
 
+enum class CommandEvidenceDecodeErrorCode {
+    invalid_size,
+    invalid_magic,
+    unsupported_schema_version,
+    nonzero_reserved_field,
+    invalid_entity_id,
+    unknown_rejection_code,
+    unknown_queue_outcome,
+    inconsistent_outcome,
+    inconsistent_state_transition,
+};
+
+class CommandEvidenceDecodeError final
+    : public std::runtime_error {
+public:
+    CommandEvidenceDecodeError(
+        CommandEvidenceDecodeErrorCode code,
+        std::string message);
+
+    [[nodiscard]] CommandEvidenceDecodeErrorCode
+    code() const noexcept;
+
+private:
+    CommandEvidenceDecodeErrorCode code_;
+};
+
 using EncodedCommandEvidence =
     std::array<
         std::byte,
@@ -126,6 +154,10 @@ using EncodedCommandEvidence =
 [[nodiscard]] EncodedCommandEvidence
 encode_command_evidence(
     const CommandEvidenceRecord& record) noexcept;
+
+[[nodiscard]] CommandEvidenceRecord
+decode_command_evidence(
+    std::span<const std::byte> encoded);
 
 [[nodiscard]] security::Sha256Digest
 digest_command_evidence(

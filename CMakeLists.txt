@@ -60,6 +60,7 @@ add_library(
     tickline_core
     cpp/src/command/authoritative_command_pipeline.cpp
     cpp/src/command/command_evidence.cpp
+    cpp/src/command/command_evidence_archive.cpp
     cpp/src/command/command_session.cpp
     cpp/src/command/command_validator.cpp
     cpp/src/security/sha256.cpp
@@ -85,164 +86,72 @@ target_link_libraries(
 
 enable_testing()
 
-add_executable(
+function(tickline_add_test target source)
+    add_executable(
+        ${target}
+        ${source}
+    )
+
+    target_link_libraries(
+        ${target}
+        PRIVATE
+            tickline_core
+            tickline_project_options
+            tickline_project_warnings
+    )
+
+    add_test(
+        NAME ${target}
+        COMMAND ${target}
+    )
+endfunction()
+
+tickline_add_test(
     tickline_version_tests
     cpp/tests/version_tests.cpp
 )
 
-target_link_libraries(
-    tickline_version_tests
-    PRIVATE
-        tickline_core
-        tickline_project_options
-        tickline_project_warnings
-)
-
-add_test(
-    NAME tickline_version_tests
-    COMMAND tickline_version_tests
-)
-
-add_executable(
+tickline_add_test(
     tickline_simulation_units_tests
     cpp/tests/simulation_units_tests.cpp
 )
 
-target_link_libraries(
-    tickline_simulation_units_tests
-    PRIVATE
-        tickline_core
-        tickline_project_options
-        tickline_project_warnings
-)
-
-add_test(
-    NAME tickline_simulation_units_tests
-    COMMAND tickline_simulation_units_tests
-)
-
-add_executable(
+tickline_add_test(
     tickline_world_tests
     cpp/tests/world_tests.cpp
 )
 
-target_link_libraries(
-    tickline_world_tests
-    PRIVATE
-        tickline_core
-        tickline_project_options
-        tickline_project_warnings
-)
-
-add_test(
-    NAME tickline_world_tests
-    COMMAND tickline_world_tests
-)
-
-add_executable(
+tickline_add_test(
     tickline_canonical_state_tests
     cpp/tests/canonical_state_tests.cpp
 )
 
-target_link_libraries(
-    tickline_canonical_state_tests
-    PRIVATE
-        tickline_core
-        tickline_project_options
-        tickline_project_warnings
-)
-
-add_test(
-    NAME tickline_canonical_state_tests
-    COMMAND tickline_canonical_state_tests
-)
-
-add_executable(
+tickline_add_test(
     tickline_command_validator_tests
     cpp/tests/command_validator_tests.cpp
 )
 
-target_link_libraries(
-    tickline_command_validator_tests
-    PRIVATE
-        tickline_core
-        tickline_project_options
-        tickline_project_warnings
-)
-
-add_test(
-    NAME tickline_command_validator_tests
-    COMMAND tickline_command_validator_tests
-)
-
-add_executable(
+tickline_add_test(
     tickline_command_session_tests
     cpp/tests/command_session_tests.cpp
 )
 
-target_link_libraries(
-    tickline_command_session_tests
-    PRIVATE
-        tickline_core
-        tickline_project_options
-        tickline_project_warnings
-)
-
-add_test(
-    NAME tickline_command_session_tests
-    COMMAND tickline_command_session_tests
-)
-
-add_executable(
+tickline_add_test(
     tickline_authoritative_command_pipeline_tests
     cpp/tests/authoritative_command_pipeline_tests.cpp
 )
 
-target_link_libraries(
-    tickline_authoritative_command_pipeline_tests
-    PRIVATE
-        tickline_core
-        tickline_project_options
-        tickline_project_warnings
-)
-
-add_test(
-    NAME tickline_authoritative_command_pipeline_tests
-    COMMAND tickline_authoritative_command_pipeline_tests
-)
-
-add_executable(
+tickline_add_test(
     tickline_command_evidence_tests
     cpp/tests/command_evidence_tests.cpp
 )
 
-target_link_libraries(
-    tickline_command_evidence_tests
-    PRIVATE
-        tickline_core
-        tickline_project_options
-        tickline_project_warnings
+tickline_add_test(
+    tickline_command_evidence_archive_tests
+    cpp/tests/command_evidence_archive_tests.cpp
 )
 
-add_test(
-    NAME tickline_command_evidence_tests
-    COMMAND tickline_command_evidence_tests
-)
-
-add_executable(
+tickline_add_test(
     tickline_sha256_tests
     cpp/tests/sha256_tests.cpp
-)
-
-target_link_libraries(
-    tickline_sha256_tests
-    PRIVATE
-        tickline_core
-        tickline_project_options
-        tickline_project_warnings
-)
-
-add_test(
-    NAME tickline_sha256_tests
-    COMMAND tickline_sha256_tests
 )
