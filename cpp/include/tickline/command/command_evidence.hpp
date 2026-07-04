@@ -2,6 +2,7 @@
 
 #include "tickline/command/command_envelope.hpp"
 #include "tickline/command/command_validator.hpp"
+#include "tickline/security/sha256.hpp"
 #include "tickline/simulation/state_fingerprint.hpp"
 #include "tickline/simulation/world.hpp"
 
@@ -14,8 +15,11 @@
 
 namespace tickline::command {
 
-inline constexpr std::uint16_t command_evidence_schema_version = 1;
-inline constexpr std::size_t command_evidence_encoded_size = 136;
+inline constexpr std::uint16_t
+command_evidence_schema_version = 2;
+
+inline constexpr std::size_t
+command_evidence_encoded_size = 160;
 
 enum class CommandQueueOutcome : std::uint16_t {
     not_attempted = 0,
@@ -28,7 +32,8 @@ enum class CommandQueueOutcome : std::uint16_t {
     unknown = 65'535,
 };
 
-[[nodiscard]] constexpr CommandQueueOutcome command_queue_outcome(
+[[nodiscard]] constexpr CommandQueueOutcome
+command_queue_outcome(
     const simulation::QueueCommandResult result) noexcept
 {
     switch (result) {
@@ -54,7 +59,8 @@ enum class CommandQueueOutcome : std::uint16_t {
     return CommandQueueOutcome::unknown;
 }
 
-[[nodiscard]] constexpr std::string_view command_queue_outcome_name(
+[[nodiscard]] constexpr std::string_view
+command_queue_outcome_name(
     const CommandQueueOutcome outcome) noexcept
 {
     switch (outcome) {
@@ -104,7 +110,7 @@ struct CommandEvidenceEntry final {
 
 struct CommandEvidenceRecord final {
     std::uint64_t ordinal;
-    simulation::StateFingerprint previous_record_fingerprint;
+    security::Sha256Digest previous_record_digest;
     CommandEvidenceEntry entry;
 
     friend constexpr bool operator==(
@@ -113,32 +119,36 @@ struct CommandEvidenceRecord final {
 };
 
 using EncodedCommandEvidence =
-    std::array<std::byte, command_evidence_encoded_size>;
+    std::array<
+        std::byte,
+        command_evidence_encoded_size>;
 
-[[nodiscard]] EncodedCommandEvidence encode_command_evidence(
+[[nodiscard]] EncodedCommandEvidence
+encode_command_evidence(
     const CommandEvidenceRecord& record) noexcept;
 
-[[nodiscard]] simulation::StateFingerprint
-fingerprint_command_evidence(
+[[nodiscard]] security::Sha256Digest
+digest_command_evidence(
     const CommandEvidenceRecord& record) noexcept;
 
 [[nodiscard]] bool verify_command_evidence_chain(
     std::span<const CommandEvidenceRecord> records,
-    simulation::StateFingerprint expected_head) noexcept;
+    security::Sha256Digest expected_head) noexcept;
 
 class AuthoritativeCommandPipeline;
 
 class CommandEvidenceLog final {
 public:
-    [[nodiscard]] std::span<const CommandEvidenceRecord>
+    [[nodiscard]] std::span<
+        const CommandEvidenceRecord>
     records() const noexcept;
 
     [[nodiscard]] std::size_t size() const noexcept;
 
     [[nodiscard]] bool empty() const noexcept;
 
-    [[nodiscard]] simulation::StateFingerprint
-    head_fingerprint() const noexcept;
+    [[nodiscard]] security::Sha256Digest
+    head_digest() const noexcept;
 
     [[nodiscard]] bool verify() const noexcept;
 
@@ -150,7 +160,7 @@ private:
     friend class AuthoritativeCommandPipeline;
 
     std::vector<CommandEvidenceRecord> records_;
-    simulation::StateFingerprint head_fingerprint_{0};
+    security::Sha256Digest head_digest_{};
 };
 
 }

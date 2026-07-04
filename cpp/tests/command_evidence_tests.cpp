@@ -1,5 +1,6 @@
 #include "tickline/command/authoritative_command_pipeline.hpp"
 #include "tickline/command/command_evidence.hpp"
+#include "tickline/security/sha256.hpp"
 #include "tickline/simulation/canonical_state.hpp"
 
 #include <array>
@@ -11,6 +12,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -27,6 +29,7 @@ using tickline::command::CommandType;
 using tickline::command::CommandValidationPolicy;
 using tickline::command::SessionId;
 using tickline::command::SetVelocityPayload;
+using tickline::security::Sha256Digest;
 using tickline::simulation::AddEntityResult;
 using tickline::simulation::EntityId;
 using tickline::simulation::EntityState;
@@ -53,8 +56,22 @@ void expect(
     const std::span<const std::byte> bytes)
 {
     constexpr std::array<char, 16> digits{
-        '0', '1', '2', '3', '4', '5', '6', '7',
-        '8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+        '7',
+        '8',
+        '9',
+        'a',
+        'b',
+        'c',
+        'd',
+        'e',
+        'f',
     };
 
     std::string output;
@@ -62,7 +79,8 @@ void expect(
 
     for (const auto byte : bytes) {
         const auto value =
-            std::to_integer<std::uint8_t>(byte);
+            std::to_integer<std::uint8_t>(
+                byte);
 
         output.push_back(
             digits[
@@ -94,19 +112,32 @@ void expect(
 {
     return CommandEnvelope{
         .schema_version =
-            tickline::command::command_schema_version,
-        .type = CommandType::set_velocity,
-        .client_id = ClientId{7},
-        .session_id = SessionId{11},
-        .sequence = sequence,
-        .target_tick = target_tick,
-        .payload = SetVelocityPayload{
-            .entity_id = EntityId{entity_id},
-            .velocity = Velocity2{
-                .x = MillimetersPerSecond{25},
-                .y = MillimetersPerSecond{-40},
+            tickline::command::
+                command_schema_version,
+        .type =
+            CommandType::set_velocity,
+        .client_id =
+            ClientId{7},
+        .session_id =
+            SessionId{11},
+        .sequence =
+            sequence,
+        .target_tick =
+            target_tick,
+        .payload =
+            SetVelocityPayload{
+                .entity_id =
+                    EntityId{entity_id},
+                .velocity =
+                    Velocity2{
+                        .x =
+                            MillimetersPerSecond{
+                                25},
+                        .y =
+                            MillimetersPerSecond{
+                                -40},
+                    },
             },
-        },
     };
 }
 
@@ -121,19 +152,29 @@ void expect(
                 MillimetersPerSecond{1'000},
         }};
 
-    const auto result = world.add_entity(
-        EntityState{
-            .id = EntityId{3},
-            .position = Position2{
-                .x = Millimeters{0},
-                .y = Millimeters{0},
-            },
-            .velocity = Velocity2{
-                .x = MillimetersPerSecond{0},
-                .y = MillimetersPerSecond{0},
-            },
-            .last_sequence = 0,
-        });
+    const auto result =
+        world.add_entity(
+            EntityState{
+                .id =
+                    EntityId{3},
+                .position =
+                    Position2{
+                        .x =
+                            Millimeters{0},
+                        .y =
+                            Millimeters{0},
+                    },
+                .velocity =
+                    Velocity2{
+                        .x =
+                            MillimetersPerSecond{
+                                0},
+                        .y =
+                            MillimetersPerSecond{
+                                0},
+                    },
+                .last_sequence = 0,
+            });
 
     if (result != AddEntityResult::added) {
         throw std::runtime_error{
@@ -147,31 +188,36 @@ void test_exact_canonical_encoding()
 {
     const CommandEvidenceRecord record{
         .ordinal = 0,
-        .previous_record_fingerprint =
-            StateFingerprint{0},
-        .entry = CommandEvidenceEntry{
-            .world_fingerprint_before =
-                StateFingerprint{
-                    0x0102030405060708ULL},
-            .observed_tick = 100,
-            .envelope = make_command(1, 101),
-            .session_sequence_before = 0,
-            .session_sequence_after = 1,
-            .pending_commands_before = 0,
-            .pending_commands_after = 1,
-            .rejection_code =
-                CommandRejectionCode::none,
-            .queue_outcome =
-                CommandQueueOutcome::accepted,
-        },
+        .previous_record_digest =
+            Sha256Digest{},
+        .entry =
+            CommandEvidenceEntry{
+                .world_fingerprint_before =
+                    StateFingerprint{
+                        0x0102030405060708ULL},
+                .observed_tick = 100,
+                .envelope =
+                    make_command(1, 101),
+                .session_sequence_before = 0,
+                .session_sequence_after = 1,
+                .pending_commands_before = 0,
+                .pending_commands_after = 1,
+                .rejection_code =
+                    CommandRejectionCode::none,
+                .queue_outcome =
+                    CommandQueueOutcome::accepted,
+            },
     };
 
     const auto encoded =
-        tickline::command::encode_command_evidence(
-            record);
+        tickline::command::
+            encode_command_evidence(record);
 
     const std::string expected{
-        "544c434500010000"
+        "544c434500020000"
+        "0000000000000000"
+        "0000000000000000"
+        "0000000000000000"
         "0000000000000000"
         "0000000000000000"
         "0102030405060708"
@@ -188,7 +234,8 @@ void test_exact_canonical_encoding()
         "0000000000000001"
         "0000000000000000"
         "0000000000000001"
-        "00000001"};
+        "00000001",
+    };
 
     expect(
         encoded.size() ==
@@ -197,15 +244,17 @@ void test_exact_canonical_encoding()
         "command evidence should have a fixed encoded size");
 
     expect(
-        bytes_to_hex(encoded) == expected,
-        "command evidence must match its canonical byte layout");
+        bytes_to_hex(encoded) ==
+            expected,
+        "command evidence must match schema version two");
 
     expect(
         tickline::command::
-            fingerprint_command_evidence(record)
+            digest_command_evidence(record)
                 .to_hex() ==
-            "103194571f7952e2",
-        "canonical evidence fingerprint must remain stable");
+            "f283ab5e334b9725935405fcfee1b7d5"
+            "202cdfeb505220040b0db51ba883595d",
+        "canonical evidence SHA-256 digest must remain stable");
 }
 
 void test_accepted_and_rejected_submissions_are_chained()
@@ -224,10 +273,11 @@ void test_accepted_and_rejected_submissions_are_chained()
         tickline::simulation::
             fingerprint_world_state(world);
 
-    const auto accepted = pipeline.submit(
-        session,
-        world,
-        make_command(1, 2));
+    const auto accepted =
+        pipeline.submit(
+            session,
+            world,
+            make_command(1, 2));
 
     expect(
         accepted.accepted(),
@@ -245,9 +295,9 @@ void test_accepted_and_rejected_submissions_are_chained()
         "first evidence ordinal should be zero");
 
     expect(
-        first.previous_record_fingerprint ==
-            StateFingerprint{0},
-        "first evidence record should begin the chain");
+        first.previous_record_digest ==
+            Sha256Digest{},
+        "first evidence record should begin with a zero digest");
 
     expect(
         first.entry.world_fingerprint_before ==
@@ -275,12 +325,13 @@ void test_accepted_and_rejected_submissions_are_chained()
         "accepted evidence should preserve queue outcome");
 
     const auto first_head =
-        pipeline.evidence().head_fingerprint();
+        pipeline.evidence().head_digest();
 
-    const auto duplicate = pipeline.submit(
-        session,
-        world,
-        make_command(1, 3));
+    const auto duplicate =
+        pipeline.submit(
+            session,
+            world,
+            make_command(1, 3));
 
     expect(
         !duplicate.accepted(),
@@ -288,7 +339,8 @@ void test_accepted_and_rejected_submissions_are_chained()
 
     expect(
         duplicate.code() ==
-            CommandRejectionCode::duplicate_sequence,
+            CommandRejectionCode::
+                duplicate_sequence,
         "duplicate rejection should remain explicit");
 
     expect(
@@ -303,9 +355,9 @@ void test_accepted_and_rejected_submissions_are_chained()
         "second evidence ordinal should be one");
 
     expect(
-        second.previous_record_fingerprint ==
+        second.previous_record_digest ==
             first_head,
-        "second evidence record should reference the first");
+        "second record should reference the first digest");
 
     expect(
         second.entry.session_sequence_before == 1 &&
@@ -319,7 +371,8 @@ void test_accepted_and_rejected_submissions_are_chained()
 
     expect(
         second.entry.rejection_code ==
-            CommandRejectionCode::duplicate_sequence,
+            CommandRejectionCode::
+                duplicate_sequence,
         "evidence should preserve duplicate rejection");
 
     expect(
@@ -344,10 +397,11 @@ void test_world_rejection_is_recorded()
 
     auto world = make_world();
 
-    const auto result = pipeline.submit(
-        session,
-        world,
-        make_command(1, 2, 99));
+    const auto result =
+        pipeline.submit(
+            session,
+            world,
+            make_command(1, 2, 99));
 
     expect(
         !result.accepted(),
@@ -379,6 +433,10 @@ void test_world_rejection_is_recorded()
         record.entry.pending_commands_before == 0 &&
             record.entry.pending_commands_after == 0,
         "world rejection should not change pending commands");
+
+    expect(
+        pipeline.evidence().verify(),
+        "world-rejection evidence should verify");
 }
 
 void test_identical_histories_produce_identical_evidence()
@@ -458,8 +516,8 @@ void test_identical_histories_produce_identical_evidence()
     }
 
     expect(
-        first_pipeline.evidence().head_fingerprint() ==
-            second_pipeline.evidence().head_fingerprint(),
+        first_pipeline.evidence().head_digest() ==
+            second_pipeline.evidence().head_digest(),
         "identical histories should create identical chain heads");
 }
 
@@ -488,7 +546,7 @@ void test_tampering_invalidates_expected_chain_head()
             make_command(2, 3)));
 
     const auto original_head =
-        pipeline.evidence().head_fingerprint();
+        pipeline.evidence().head_digest();
 
     const auto source =
         pipeline.evidence().records();
@@ -505,9 +563,15 @@ void test_tampering_invalidates_expected_chain_head()
             verify_command_evidence_chain(
                 tampered,
                 original_head),
-        "modified evidence should not match the original chain head");
+        "modified evidence should not match the trusted chain head");
 
-    std::swap(tampered[0], tampered[1]);
+    tampered.assign(
+        source.begin(),
+        source.end());
+
+    std::swap(
+        tampered[0],
+        tampered[1]);
 
     expect(
         !tickline::command::
@@ -515,30 +579,77 @@ void test_tampering_invalidates_expected_chain_head()
                 tampered,
                 original_head),
         "reordered evidence should not verify");
+
+    tampered.assign(
+        source.begin(),
+        source.end());
+
+    tampered[1].previous_record_digest =
+        Sha256Digest{};
+
+    expect(
+        !tickline::command::
+            verify_command_evidence_chain(
+                tampered,
+                original_head),
+        "broken digest linkage should not verify");
+}
+
+void test_wrong_expected_head_is_rejected()
+{
+    AuthoritativeCommandPipeline pipeline;
+
+    CommandSession session{
+        ClientId{7},
+        SessionId{11},
+        make_policy(),
+    };
+
+    auto world = make_world();
+
+    static_cast<void>(
+        pipeline.submit(
+            session,
+            world,
+            make_command(1, 2)));
+
+    expect(
+        !tickline::command::
+            verify_command_evidence_chain(
+                pipeline.evidence().records(),
+                Sha256Digest{}),
+        "a chain must not verify against an untrusted wrong head");
 }
 
 void test_queue_outcome_contract()
 {
     expect(
-        tickline::command::command_queue_outcome_name(
-            CommandQueueOutcome::not_attempted) ==
+        tickline::command::
+            command_queue_outcome_name(
+                CommandQueueOutcome::
+                    not_attempted) ==
             "not_attempted",
         "not-attempted outcome should have a stable name");
 
     expect(
-        tickline::command::command_queue_outcome_name(
-            CommandQueueOutcome::accepted) ==
+        tickline::command::
+            command_queue_outcome_name(
+                CommandQueueOutcome::
+                    accepted) ==
             "accepted",
         "accepted outcome should have a stable name");
 
     expect(
-        tickline::command::command_queue_outcome_name(
-            static_cast<CommandQueueOutcome>(1234)) ==
+        tickline::command::
+            command_queue_outcome_name(
+                static_cast<
+                    CommandQueueOutcome>(
+                    1234)) ==
             "unknown",
         "invalid queue outcome should fail closed");
 }
 
-} // namespace
+}
 
 int main()
 {
@@ -548,6 +659,7 @@ int main()
         test_world_rejection_is_recorded();
         test_identical_histories_produce_identical_evidence();
         test_tampering_invalidates_expected_chain_head();
+        test_wrong_expected_head_is_rejected();
         test_queue_outcome_contract();
     } catch (const std::exception& error) {
         std::cerr

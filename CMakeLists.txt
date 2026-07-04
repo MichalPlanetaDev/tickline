@@ -62,6 +62,7 @@ add_library(
     cpp/src/command/command_evidence.cpp
     cpp/src/command/command_session.cpp
     cpp/src/command/command_validator.cpp
+    cpp/src/security/sha256.cpp
     cpp/src/simulation/canonical_state.cpp
     cpp/src/simulation/state_fingerprint.cpp
     cpp/src/simulation/world.cpp
@@ -226,4 +227,22 @@ target_link_libraries(
 add_test(
     NAME tickline_command_evidence_tests
     COMMAND tickline_command_evidence_tests
+)
+
+add_executable(
+    tickline_sha256_tests
+    cpp/tests/sha256_tests.cpp
+)
+
+target_link_libraries(
+    tickline_sha256_tests
+    PRIVATE
+        tickline_core
+        tickline_project_options
+        tickline_project_warnings
+)
+
+add_test(
+    NAME tickline_sha256_tests
+    COMMAND tickline_sha256_tests
 )
