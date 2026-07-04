@@ -126,6 +126,13 @@ no undefined behavior on invalid input
 
 The parser should not normalize hostile data into apparently valid data. Rejection must be explicit.
 
+Implemented protocol controls include a fixed big-endian header, exact frame and
+payload sizes, a configurable maximum frame size, stable parser errors, strict
+one-frame parsing, bounded incremental stream reassembly, persistent fail-closed
+stream state, compatibility tests, and parser fuzzing against a committed
+regression corpus. These controls do not provide transport authentication,
+confidentiality, rate limiting, or connection-level denial-of-service handling.
+
 ### Boundary 2: Protocol parser to simulation core
 
 A syntactically valid message is still not trusted.
