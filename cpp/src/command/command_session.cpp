@@ -52,10 +52,10 @@ CommandAdmissionResult::CommandAdmissionResult(
     : code_{code},
       command_{std::move(command)}
 {
-    const auto accepted_code =
+    const auto has_accepted_code =
         code_ == CommandRejectionCode::none;
 
-    if (accepted_code != command_.has_value()) {
+    if (has_accepted_code != command_.has_value()) {
         throw std::invalid_argument{
             "command admission result has inconsistent state"};
     }
@@ -100,9 +100,9 @@ const CommandValidationPolicy& CommandSession::policy() const noexcept
     return validator_.policy();
 }
 
-CommandAdmissionResult CommandSession::admit(
+CommandAdmissionResult CommandSession::evaluate(
     const CommandEnvelope& command,
-    const std::uint64_t current_tick)
+    const std::uint64_t current_tick) const
 {
     const auto validation = validator_.validate(
         command,
@@ -127,12 +127,8 @@ CommandAdmissionResult CommandSession::admit(
             CommandRejectionCode::sequence_regression);
     }
 
-    auto simulation_command = translate(command);
-
-    highest_accepted_sequence_ = command.sequence;
-
     return CommandAdmissionResult::accept(
-        std::move(simulation_command));
+        translate(command));
 }
 
 simulation::VelocityCommand CommandSession::translate(
@@ -144,6 +140,12 @@ simulation::VelocityCommand CommandSession::translate(
         .sequence = command.sequence,
         .velocity = command.payload.velocity,
     };
+}
+
+void CommandSession::commit_accepted_sequence(
+    const std::uint64_t sequence) noexcept
+{
+    highest_accepted_sequence_ = sequence;
 }
 
 }

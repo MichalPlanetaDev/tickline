@@ -21,6 +21,10 @@ enum class CommandRejectionCode : std::uint16_t {
     velocity_out_of_range = 10,
     duplicate_sequence = 11,
     sequence_regression = 12,
+    unknown_entity = 13,
+    entity_sequence_not_increasing = 14,
+    target_tick_regression = 15,
+    simulation_rejection_unknown = 16,
 };
 
 struct CommandValidationPolicy final {
@@ -107,6 +111,18 @@ private:
 
     case CommandRejectionCode::sequence_regression:
         return "sequence_regression";
+
+    case CommandRejectionCode::unknown_entity:
+        return "unknown_entity";
+
+    case CommandRejectionCode::entity_sequence_not_increasing:
+        return "entity_sequence_not_increasing";
+
+    case CommandRejectionCode::target_tick_regression:
+        return "target_tick_regression";
+
+    case CommandRejectionCode::simulation_rejection_unknown:
+        return "simulation_rejection_unknown";
     }
 
     return "unknown";

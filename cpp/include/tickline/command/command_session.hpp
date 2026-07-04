@@ -8,6 +8,8 @@
 
 namespace tickline::command {
 
+class AuthoritativeCommandPipeline;
+
 class CommandAdmissionResult final {
 public:
     [[nodiscard]] static CommandAdmissionResult accept(
@@ -47,13 +49,18 @@ public:
 
     [[nodiscard]] const CommandValidationPolicy& policy() const noexcept;
 
-    [[nodiscard]] CommandAdmissionResult admit(
+    [[nodiscard]] CommandAdmissionResult evaluate(
         const CommandEnvelope& command,
-        std::uint64_t current_tick);
+        std::uint64_t current_tick) const;
 
 private:
     [[nodiscard]] static simulation::VelocityCommand translate(
         const CommandEnvelope& command);
+
+    void commit_accepted_sequence(
+        std::uint64_t sequence) noexcept;
+
+    friend class AuthoritativeCommandPipeline;
 
     ClientId client_id_;
     SessionId session_id_;
