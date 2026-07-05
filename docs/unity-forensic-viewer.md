@@ -294,6 +294,8 @@ export compatibility, and full integrity visualization.
 
 ## Running Unity tests
 
+Because the Windows Unity editor rejects case-sensitive WSL project paths, the test runner stages a disposable project copy on the case-insensitive Windows temporary filesystem. The WSL repository remains the authoritative source and Unity does not modify it.
+
 From WSL:
 
     bash scripts/check-unity.sh
