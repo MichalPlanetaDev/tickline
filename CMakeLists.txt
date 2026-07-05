@@ -253,3 +253,22 @@ if(TICKLINE_BUILD_FUZZ_TARGETS)
             -fsanitize=fuzzer
     )
 endif()
+
+find_package(SQLite3 REQUIRED)
+
+target_sources(
+    tickline_core
+    PRIVATE
+        cpp/src/storage/investigation_store.cpp
+)
+
+target_link_libraries(
+    tickline_core
+    PUBLIC
+        SQLite::SQLite3
+)
+
+tickline_add_test(
+    tickline_investigation_store_tests
+    cpp/tests/investigation_store_tests.cpp
+)
