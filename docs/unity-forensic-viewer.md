@@ -397,3 +397,7 @@ The C++ exporter test compares its output byte-for-byte with the committed Unity
 ## Investigation workspace model
 
 The workspace model converts a validated replay timeline into deterministic session and evidence inspection records. It exposes accepted and rejected outcome filters, exact client/session filtering, visible-to-timeline selection mapping, evidence-chain context, trusted-head status, replay verification status, and two-way synchronization with the replay playback controller. Filtering does not silently move playback; the interface can explicitly select any visible evidence record while preserving its original timeline index.
+
+## Viewer session lifecycle
+
+The viewer session owns the active validated bundle and investigation workspace. Bundle loading is transactional: a successful load replaces and disposes the previous workspace, while a failed load records stable validation findings and preserves the active investigation, playback position, filters, and selection. Clearing or disposing the session releases workspace event subscriptions and returns the viewer to an empty state.
