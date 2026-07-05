@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "archiveDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "initialHeadDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+  "trustedHeadDigest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "importedAtUtc": "2026-07-05T12:00:00Z",
+  "sessions": [
+    {
+      "clientId": "client-1",
+      "sessionId": "session-1",
+      "lastCommittedSequence": "2",
+      "firstTargetTick": "10",
+      "lastTargetTick": "11",
+      "acceptedCommands": 1,
+      "rejectedCommands": 1
+    }
+  ],
+  "evidence": [
+    {
+      "ordinal": 0,
+      "clientId": "client-1",
+      "sessionId": "session-1",
+      "sessionSequence": "1",
+      "targetTick": "10",
+      "commandType": "set_velocity",
+      "outcome": "accepted",
+      "rejectionCode": "none",
+      "previousDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+      "recordDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "ordinal": 1,
+      "clientId": "client-1",
+      "sessionId": "session-1",
+      "sessionSequence": "2",
+      "targetTick": "11",
+      "commandType": "set_velocity",
+      "outcome": "rejected",
+      "rejectionCode": "sequence_replayed",
+      "previousDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "recordDigest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    }
+  ],
+  "replay": {
+    "verified": true,
+    "finalTick": "11",
+    "finalWorldFingerprint": "18446744073709551615",
+    "acceptedCommands": 1,
+    "rejectedCommands": 1
+  }
+}
