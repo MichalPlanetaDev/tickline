@@ -6,12 +6,11 @@ It is not a cheat project, bypass project, malware project, or reverse-engineeri
 
 ## Current release
 
-**v0.5.0 — Protocol boundary and parser hardening**
+**v0.6.0 — Investigation storage and query layer**
 
-The current C++ core now includes deterministic authoritative simulation, typed command admission, replay protection, SHA-256-linked evidence, verified evidence archives, deterministic forensic replay, strict 32-byte big-endian frame decoding, bounded command-envelope deserialization, stable parser errors, incremental stream reassembly, compatibility tests, malformed-input regression coverage, and a libFuzzer target.
+The current release adds a migration-managed SQLite investigation repository for verified evidence archives, transactional and idempotent imports, persisted session and replay metadata, integrity constraints, pagination and filtering, corruption detection, and rollback coverage.
 
-The repository also includes the Go-based `tickline-dev` verification console, Python support-package scaffolding, Docker checks, sanitizer builds, and GitHub workflow documentation.
-
+The deterministic simulation, authoritative command pipeline, protocol parser, SHA-256 evidence chain, forensic replay, developer console, sanitizer builds, and Docker verification remain part of the complete system.
 ## Security thesis
 
 Tickline models this trust chain:
@@ -173,19 +172,16 @@ Replay detects:
 The current release does not provide:
 
 - a production TCP or UDP server;
-- socket lifecycle or connection management;
-- authenticated sessions;
+- authenticated remote sessions;
 - transport encryption;
 - digital signatures or key management;
-- crash-consistent append-only evidence storage;
-- a concurrent session registry;
-- database ingestion;
+- a concurrent multi-process ingestion service;
+- a remote investigation API;
 - Unity visualization;
 - collision or hit validation;
 - production anti-cheat deployment.
 
-The protocol parser secures the owned byte boundary. It does not authenticate clients, encrypt traffic, sign evidence, or establish producer attribution.
-
+The SQLite repository is a local investigation and query layer. It is not presented as a production multi-tenant service or as proof of evidence authorship.
 ## Repository layout
 
 ```text

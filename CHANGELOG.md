@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.0] - 2026-07-05
+
+### Added
+
+- Migration-managed SQLite investigation storage.
+- Transactional and idempotent verified evidence-archive imports.
+- Persisted session, submission, evidence, and replay metadata.
+- Integrity constraints, pagination, filtering, and corruption detection.
+- Rollback and storage-failure coverage.
+- SQLite support in the Docker verification environment.
+
 ## [0.5.0] - 2026-07-04
 
 ### Added
