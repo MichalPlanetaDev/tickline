@@ -1,51 +1,75 @@
 {
   "schemaVersion": 1,
-  "archiveDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "archiveDigest": "4c110a6f10dffb0160515b2d61fc5a999fc13fdf574d59b09dcd3823dd4f28f4",
   "initialHeadDigest": "0000000000000000000000000000000000000000000000000000000000000000",
-  "trustedHeadDigest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "trustedHeadDigest": "6a5d4b99c165d65584d4be29be47061ea28a54d7c9765b1224ce9e24ca8badcf",
   "importedAtUtc": "2026-07-05T12:00:00Z",
   "sessions": [
     {
-      "clientId": "client-1",
-      "sessionId": "session-1",
+      "clientId": "7",
+      "sessionId": "11",
       "lastCommittedSequence": "2",
-      "firstTargetTick": "10",
-      "lastTargetTick": "11",
-      "acceptedCommands": 1,
-      "rejectedCommands": 1
+      "firstTargetTick": "2",
+      "lastTargetTick": "3",
+      "acceptedCommands": 2,
+      "rejectedCommands": 2
     }
   ],
   "evidence": [
     {
       "ordinal": 0,
-      "clientId": "client-1",
-      "sessionId": "session-1",
+      "clientId": "7",
+      "sessionId": "11",
       "sessionSequence": "1",
-      "targetTick": "10",
+      "targetTick": "2",
       "commandType": "set_velocity",
       "outcome": "accepted",
       "rejectionCode": "none",
       "previousDigest": "0000000000000000000000000000000000000000000000000000000000000000",
-      "recordDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      "recordDigest": "38eea0df6400c0f7d0276e201aa94c32fe34c91006da57cbfa7e69b55bd14913"
     },
     {
       "ordinal": 1,
-      "clientId": "client-1",
-      "sessionId": "session-1",
-      "sessionSequence": "2",
-      "targetTick": "11",
+      "clientId": "7",
+      "sessionId": "11",
+      "sessionSequence": "1",
+      "targetTick": "3",
       "commandType": "set_velocity",
       "outcome": "rejected",
-      "rejectionCode": "sequence_replayed",
-      "previousDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-      "recordDigest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      "rejectionCode": "duplicate_sequence",
+      "previousDigest": "38eea0df6400c0f7d0276e201aa94c32fe34c91006da57cbfa7e69b55bd14913",
+      "recordDigest": "2fa77d6f0133ea1f68d4178ae1e42324fe18aa96426ee1755d21a52a5225eafb"
+    },
+    {
+      "ordinal": 2,
+      "clientId": "7",
+      "sessionId": "11",
+      "sessionSequence": "2",
+      "targetTick": "3",
+      "commandType": "set_velocity",
+      "outcome": "rejected",
+      "rejectionCode": "unknown_entity",
+      "previousDigest": "2fa77d6f0133ea1f68d4178ae1e42324fe18aa96426ee1755d21a52a5225eafb",
+      "recordDigest": "11339d4dac5b2649b24061d5f5ff3de5e2fd18e938fddd064b1849f1662cbc7f"
+    },
+    {
+      "ordinal": 3,
+      "clientId": "7",
+      "sessionId": "11",
+      "sessionSequence": "2",
+      "targetTick": "3",
+      "commandType": "set_velocity",
+      "outcome": "accepted",
+      "rejectionCode": "none",
+      "previousDigest": "11339d4dac5b2649b24061d5f5ff3de5e2fd18e938fddd064b1849f1662cbc7f",
+      "recordDigest": "6a5d4b99c165d65584d4be29be47061ea28a54d7c9765b1224ce9e24ca8badcf"
     }
   ],
   "replay": {
     "verified": true,
-    "finalTick": "11",
-    "finalWorldFingerprint": "18446744073709551615",
-    "acceptedCommands": 1,
-    "rejectedCommands": 1
+    "finalTick": "3",
+    "finalWorldFingerprint": "72623859790382856",
+    "acceptedCommands": 2,
+    "rejectedCommands": 2
   }
 }

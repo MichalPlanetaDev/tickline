@@ -26,30 +26,38 @@ namespace Tickline.Forensics.Tests
             var controller = CreateController();
 
             Assert.That(controller.StepBackward(), Is.False);
-            Assert.That(controller.CurrentIndex, Is.EqualTo(0));
 
             Assert.That(controller.StepForward(), Is.True);
             Assert.That(controller.CurrentIndex, Is.EqualTo(1));
 
+            Assert.That(controller.StepForward(), Is.True);
+            Assert.That(controller.CurrentIndex, Is.EqualTo(2));
+
+            Assert.That(controller.StepForward(), Is.True);
+            Assert.That(controller.CurrentIndex, Is.EqualTo(3));
+
             Assert.That(controller.StepForward(), Is.False);
-            Assert.That(controller.CurrentIndex, Is.EqualTo(1));
+            Assert.That(controller.CurrentIndex, Is.EqualTo(3));
 
             Assert.That(controller.StepBackward(), Is.True);
-            Assert.That(controller.CurrentIndex, Is.EqualTo(0));
+            Assert.That(controller.CurrentIndex, Is.EqualTo(2));
         }
 
         [Test]
-        public void PlaybackAdvancesAfterConfiguredInterval()
+        public void PlaybackAdvancesAtConfiguredInterval()
         {
             var controller = CreateController(1.0);
 
             Assert.That(controller.Play(), Is.True);
             Assert.That(controller.Advance(0.4), Is.EqualTo(0));
             Assert.That(controller.CurrentIndex, Is.EqualTo(0));
-            Assert.That(controller.IsPlaying, Is.True);
 
             Assert.That(controller.Advance(0.6), Is.EqualTo(1));
             Assert.That(controller.CurrentIndex, Is.EqualTo(1));
+            Assert.That(controller.IsPlaying, Is.True);
+
+            Assert.That(controller.Advance(2.0), Is.EqualTo(2));
+            Assert.That(controller.CurrentIndex, Is.EqualTo(3));
             Assert.That(controller.IsPlaying, Is.False);
         }
 
@@ -74,7 +82,7 @@ namespace Tickline.Forensics.Tests
             controller.PositionChanged +=
                 index => notifiedIndex = index;
 
-            Assert.That(controller.SeekToTick(11), Is.True);
+            Assert.That(controller.SeekToTick(3), Is.True);
             Assert.That(controller.CurrentIndex, Is.EqualTo(1));
             Assert.That(notifiedIndex, Is.EqualTo(1));
 

@@ -20,7 +20,7 @@ namespace Tickline.Forensics.Tests
             Assert.That(result.Bundle, Is.Not.Null);
             Assert.That(result.Bundle.schemaVersion, Is.EqualTo(1));
             Assert.That(result.Bundle.sessions.Length, Is.EqualTo(1));
-            Assert.That(result.Bundle.evidence.Length, Is.EqualTo(2));
+            Assert.That(result.Bundle.evidence.Length, Is.EqualTo(4));
             Assert.That(result.Bundle.replay.verified, Is.True);
         }
 

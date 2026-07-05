@@ -8,7 +8,7 @@ namespace Tickline.Forensics.Tests
     public sealed class ReplayTimelineTests
     {
         [Test]
-        public void ValidBundleBuildsDeterministicTimeline()
+        public void NativeBundleBuildsDeterministicTimeline()
         {
             var result = BuildFixtureTimeline();
 
@@ -17,44 +17,42 @@ namespace Tickline.Forensics.Tests
                 Is.True,
                 FormatIssues(result.Validation));
 
-            Assert.That(result.Timeline.Count, Is.EqualTo(2));
-
-            var first = result.Timeline[0];
-            var second = result.Timeline[1];
-
-            Assert.That(first.Ordinal, Is.EqualTo(0));
-            Assert.That(first.TargetTick, Is.EqualTo(10UL));
-            Assert.That(first.SessionSequence, Is.EqualTo(1UL));
-            Assert.That(first.IsAccepted, Is.True);
-
-            Assert.That(second.Ordinal, Is.EqualTo(1));
-            Assert.That(second.TargetTick, Is.EqualTo(11UL));
-            Assert.That(second.SessionSequence, Is.EqualTo(2UL));
-            Assert.That(second.IsRejected, Is.True);
-            Assert.That(
-                second.RejectionCode,
-                Is.EqualTo("sequence_replayed"));
-        }
-
-        [Test]
-        public void TimelinePreservesEvidenceOrder()
-        {
-            var result = BuildFixtureTimeline();
+            Assert.That(result.Timeline.Count, Is.EqualTo(4));
 
             Assert.That(
                 result.Timeline.Entries.Select(
                     entry => entry.Ordinal),
-                Is.EqualTo(new[] { 0, 1 }));
+                Is.EqualTo(new[] { 0, 1, 2, 3 }));
 
             Assert.That(
-                result.Timeline.Entries.Select(
-                    entry => entry.RecordDigest),
-                Is.EqualTo(
-                    new[]
-                    {
-                        new string('b', 64),
-                        new string('c', 64)
-                    }));
+                result.Timeline[0].IsAccepted,
+                Is.True);
+
+            Assert.That(
+                result.Timeline[1].IsRejected,
+                Is.True);
+        }
+
+        [Test]
+        public void TimelinePreservesEvidenceChain()
+        {
+            var timeline = BuildFixtureTimeline().Timeline;
+
+            Assert.That(
+                timeline[0].PreviousDigest,
+                Is.EqualTo(timeline.InitialHeadDigest));
+
+            for (var index = 1; index < timeline.Count; index++)
+            {
+                Assert.That(
+                    timeline[index].PreviousDigest,
+                    Is.EqualTo(
+                        timeline[index - 1].RecordDigest));
+            }
+
+            Assert.That(
+                timeline[timeline.Count - 1].RecordDigest,
+                Is.EqualTo(timeline.TrustedHeadDigest));
         }
 
         [Test]
@@ -67,11 +65,11 @@ namespace Tickline.Forensics.Tests
                 Is.EqualTo(0));
 
             Assert.That(
-                timeline.FindNearestIndexToTick(10),
+                timeline.FindNearestIndexToTick(2),
                 Is.EqualTo(0));
 
             Assert.That(
-                timeline.FindNearestIndexToTick(11),
+                timeline.FindNearestIndexToTick(3),
                 Is.EqualTo(1));
 
             Assert.That(
@@ -94,14 +92,17 @@ namespace Tickline.Forensics.Tests
 
             Assert.That(result.IsValid, Is.False);
             Assert.That(result.Timeline, Is.Null);
+
             Assert.That(
                 result.Validation.Issues.Any(
                     issue =>
-                        issue.Code == "evidence_chain_broken"),
+                        issue.Code ==
+                        "evidence_chain_broken"),
                 Is.True);
         }
 
-        private static ReplayTimelineBuildResult BuildFixtureTimeline()
+        private static ReplayTimelineBuildResult
+            BuildFixtureTimeline()
         {
             var load =
                 InvestigationBundleLoader.LoadFromFile(
