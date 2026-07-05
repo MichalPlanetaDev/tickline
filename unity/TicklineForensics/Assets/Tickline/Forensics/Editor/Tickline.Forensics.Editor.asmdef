@@ -1,9 +1,8 @@
 {
-  "name": "Tickline.Forensics.Tests",
-  "rootNamespace": "Tickline.Forensics.Tests",
+  "name": "Tickline.Forensics.Editor",
+  "rootNamespace": "Tickline.Forensics.Editor",
   "references": [
-    "Tickline.Forensics",
-    "Tickline.Forensics.Editor"
+    "Tickline.Forensics"
   ],
   "includePlatforms": [
     "Editor"
@@ -15,8 +14,5 @@
   "autoReferenced": true,
   "defineConstraints": [],
   "versionDefines": [],
-  "noEngineReferences": false,
-  "optionalUnityReferences": [
-    "TestAssemblies"
-  ]
+  "noEngineReferences": false
 }

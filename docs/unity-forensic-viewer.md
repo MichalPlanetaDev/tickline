@@ -401,3 +401,7 @@ The workspace model converts a validated replay timeline into deterministic sess
 ## Viewer session lifecycle
 
 The viewer session owns the active validated bundle and investigation workspace. Bundle loading is transactional: a successful load replaces and disposes the previous workspace, while a failed load records stable validation findings and preserves the active investigation, playback position, filters, and selection. Clearing or disposing the session releases workspace event subscriptions and returns the viewer to an empty state.
+
+## Editor forensic replay window
+
+The Unity Editor exposes the viewer through `Window > Tickline > Forensic Replay Viewer`. The window provides transactional JSON bundle selection, active-source visibility, integrity and replay summaries, exact session and outcome filters, deterministic evidence-list selection, command and session inspection, evidence-chain digest inspection, trusted-head status, timeline seeking, stepping, playback speed selection, and play/pause progression driven by the Editor update loop. Rejected replacement files remain visible as validation findings without replacing the active investigation.
