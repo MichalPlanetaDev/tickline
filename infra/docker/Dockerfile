@@ -7,6 +7,7 @@ RUN apt-get update \
         ca-certificates \
         cmake \
         g++ \
+        libsqlite3-dev \
         make \
         python3 \
     && rm -rf /var/lib/apt/lists/*
