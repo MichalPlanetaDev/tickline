@@ -38,3 +38,20 @@ type Plan struct {
 	Definition Definition
 	Stages     []PlannedStage
 }
+
+func (plan Plan) StageIDs() []string {
+	identifiers := make(
+		[]string,
+		0,
+		len(plan.Stages),
+	)
+
+	for _, stage := range plan.Stages {
+		identifiers = append(
+			identifiers,
+			stage.ID,
+		)
+	}
+
+	return identifiers
+}

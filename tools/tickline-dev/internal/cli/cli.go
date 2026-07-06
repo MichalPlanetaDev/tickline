@@ -96,6 +96,7 @@ Check options:
 Workflow commands:
   workflow list
   workflow show <workflow-id>
+  workflow run <workflow-id>
 
 Mode selection:
   A compatible interactive terminal uses the TUI automatically.

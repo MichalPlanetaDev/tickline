@@ -81,6 +81,12 @@ func runWorkflow(
 			dependencies,
 		)
 
+	case "run":
+		return runWorkflowRun(
+			args[1:],
+			dependencies,
+		)
+
 	default:
 		fmt.Fprintf(
 			dependencies.Stderr,
@@ -531,6 +537,7 @@ Usage:
 Commands:
   list       List available workflows
   show       Show a resolved workflow plan
+  run        Execute a workflow through the shared runner
   help       Show this help`)
 }
 
