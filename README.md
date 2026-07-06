@@ -6,11 +6,11 @@ It is not a cheat project, bypass project, malware project, or reverse-engineeri
 
 ## Current release
 
-**v0.7.0 — Unity forensic replay viewer**
+**v0.8.0 — Analytics and statistics**
 
-The current release adds a deterministic native-to-Unity investigation-bundle pipeline and a read-only Unity Editor forensic replay viewer. It provides schema validation, transactional loading, session and outcome filters, evidence-chain inspection, trusted-head verification status, deterministic timeline selection, stepping, seeking, playback-speed controls, and replay metadata inspection.
+The current release adds strict Python ingestion for schema-versioned investigation bundles, deterministic descriptive statistics, verified multi-investigation baselines, explainable outlier findings, explicit false-positive review metadata, versioned JSON reports, and a repository-local analytics command-line interface.
 
-The deterministic simulation, authoritative command pipeline, protocol parser, SHA-256 evidence chain, SQLite investigation repository, native bundle exporter, developer console, sanitizer builds, Docker verification, and Unity EditMode tests remain part of the complete system.
+The deterministic simulation, authoritative command pipeline, protocol parser, SHA-256 evidence chain, SQLite investigation repository, native bundle exporter, Unity forensic viewer, developer console, sanitizer builds, Docker verification, and Unity EditMode tests remain part of the complete system.
 
 ## Security thesis
 
@@ -278,6 +278,19 @@ tickline-dev check --json
 tickline-dev check --only cpp,go
 ```
 
+
+## Investigation analytics
+
+The Python analytics layer consumes validated investigation bundles and produces deterministic descriptive statistics, verified multi-investigation baselines, explainable outlier findings, optional false-positive reviews, and schema-versioned JSON reports.
+
+Run the command-line interface through the repository-local launcher:
+
+    bash scripts/tickline-analytics.sh --help
+
+The native C++ layer remains authoritative for evidence verification, deterministic replay, storage, and bundle export. Analytics findings are review inputs rather than automatic security verdicts.
+
+See `docs/analytics.md` for the input contract, baseline methodology, outlier policy, review schema, report contract, and limitations.
+
 ## Release history
 
 | Version | Milestone | Delivered scope |
@@ -290,12 +303,12 @@ tickline-dev check --only cpp,go
 | `v0.5.0` | Protocol boundary and parser hardening | Strict framing, bounded decoding, incremental stream parsing, malformed-input tests and fuzzing |
 | `v0.6.0` | Investigation storage and query layer | SQLite schema, verified imports, evidence queries, persisted replay metadata and integrity checks |
 | `v0.7.0` | Unity forensic replay viewer | Native JSON export, Unity validation, transactional loading, timeline playback and evidence inspection |
+| `v0.8.0` | Analytics and statistics | Validated Python ingestion, descriptive statistics, robust baselines, explainable outliers, reviews and JSON reports |
 
 ## Planned milestones
 
 | Version | Milestone | Intended scope |
 |---|---|---|
-| `v0.8.0` | Analytics and statistics | Python reports, baselines, outlier analysis and false-positive review |
 | `v0.9.0` | Runtime diagnostics and service hardening | Docker runtime, diagnostics, observability and operational failure tests |
 | `v1.0.0` | Portfolio release | Reproducible demonstration, screenshots, documentation freeze and final review |
 
@@ -314,7 +327,8 @@ The roadmap is subordinate to verified implementation. Features are not consider
 - `docs/github-workflow.md` — issue, branch, review, and release workflow;
 - `docs/release-process.md` — release invariants and exact release procedure;
 - `docs/unity-forensic-viewer.md` — native bundle contract, Unity validation, timeline, workspace, lifecycle, and Editor viewer;
-- `docs/releases/v0.7.0.md` — release notes for the current milestone.
+- `docs/analytics.md` — validated analytics input, descriptive statistics, baseline policy, outlier evaluation, review workflow, and report contract;
+- `docs/releases/v0.8.0.md` — release notes for the current milestone.
 
 ## Defensive scope
 

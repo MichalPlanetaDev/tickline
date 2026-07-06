@@ -16,7 +16,7 @@ struct Version {
 {
     return Version{
         .major = 0,
-        .minor = 7,
+        .minor = 8,
         .patch = 0,
         .channel = "",
     };
