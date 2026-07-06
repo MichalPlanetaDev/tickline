@@ -57,6 +57,9 @@ func Run(args []string, dependencies Dependencies) int {
 	case "check":
 		return runCheck(args[1:], dependencies)
 
+	case "doctor":
+		return runDoctor(args[1:], dependencies)
+
 	case "workflow":
 		return runWorkflow(args[1:], dependencies)
 
@@ -81,7 +84,8 @@ Usage:
 
 Commands:
   check       Run project verification
-  workflow    Inspect named operational workflows
+  doctor      Inspect repository and toolchain readiness
+  workflow    Inspect and execute operational workflows
   version     Print the developer-console version
   help        Show this help
 
