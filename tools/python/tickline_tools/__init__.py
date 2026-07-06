@@ -1,5 +1,16 @@
 """Python support tools for Tickline analysis and automation."""
 
+from .analysis_report import (
+    ANALYSIS_REPORT_SCHEMA_VERSION,
+    REVIEW_DISPOSITIONS,
+    AnalysisReportError,
+    FindingReview,
+    InvestigationAnalysisReport,
+    analysis_report_document,
+    build_analysis_report,
+    render_analysis_report_json,
+    write_analysis_report_json,
+)
 from .analytics import (
     CommandTypeStatistics,
     InvestigationStatistics,
@@ -31,8 +42,13 @@ from .investigation_bundle import (
 )
 
 __all__ = [
+    "ANALYSIS_REPORT_SCHEMA_VERSION",
+    "REVIEW_DISPOSITIONS",
     "SUPPORTED_SCHEMA_VERSION",
+    "AnalysisReportError",
     "CommandTypeStatistics",
+    "FindingReview",
+    "InvestigationAnalysisReport",
     "InvestigationBaseline",
     "InvestigationBaselineError",
     "InvestigationBundle",
@@ -50,11 +66,15 @@ __all__ = [
     "SessionStatistics",
     "TickStatistics",
     "__version__",
+    "analysis_report_document",
     "analyze_investigation",
+    "build_analysis_report",
     "build_investigation_baseline",
     "evaluate_investigation_outliers",
     "load_investigation_bundle",
     "parse_investigation_bundle_json",
+    "render_analysis_report_json",
+    "write_analysis_report_json",
 ]
 
 __version__ = "0.7.0"
