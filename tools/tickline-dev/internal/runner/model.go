@@ -62,11 +62,12 @@ type StageResult struct {
 }
 
 type RunResult struct {
-	RunID        string
-	LogDirectory string
-	ResultPath   string
-	Status       Status
-	StartedAt    time.Time
-	Duration     time.Duration
-	Stages       []StageResult
+	RunID                string
+	LogDirectory         string
+	ResultPath           string
+	ArtifactManifestPath string
+	Status               Status
+	StartedAt            time.Time
+	Duration             time.Duration
+	Stages               []StageResult
 }

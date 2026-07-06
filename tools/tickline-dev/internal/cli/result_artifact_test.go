@@ -90,9 +90,9 @@ func TestCheckPersistsCanonicalResultDocument(
 		)
 	}
 
-	if report.SchemaVersion != 1 {
+	if report.SchemaVersion != 2 {
 		t.Fatalf(
-			"expected schema version 1, got %d",
+			"expected schema version 2, got %d",
 			report.SchemaVersion,
 		)
 	}

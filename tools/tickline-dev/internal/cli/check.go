@@ -366,43 +366,16 @@ func newExecutionFunction(
 			plan,
 		)
 
-		result.RunID = logStore.RunID()
-		result.LogDirectory = logStore.RelativeDirectory()
-		result.ResultPath = logStore.ArtifactPath(
-			resultArtifactName,
+		result, artifactError := persistRunArtifacts(
+			repositoryRoot,
+			logStore,
+			result,
+			logWriteError,
 		)
-
-		for index := range result.Stages {
-			if result.Stages[index].StartedAt.IsZero() {
-				continue
-			}
-
-			result.Stages[index].LogPath =
-				logStore.StageCombinedPath(
-					result.Stages[index].ID,
-				)
-		}
-
-		reportData, reportError :=
-			jsonreport.Marshal(result)
-
-		var artifactError error
-
-		if reportError == nil {
-			_, artifactError = logStore.WriteArtifact(
-				resultArtifactName,
-				reportData,
-			)
-		}
-
-		closeError := logStore.Close()
 
 		return result, errors.Join(
 			runError,
-			logWriteError,
-			reportError,
 			artifactError,
-			closeError,
 		)
 	}
 }
@@ -541,6 +514,12 @@ func printPlainSummary(
 		output,
 		"Report: %s\n",
 		result.ResultPath,
+	)
+
+	fmt.Fprintf(
+		output,
+		"Artifacts: %s\n",
+		result.ArtifactManifestPath,
 	)
 }
 

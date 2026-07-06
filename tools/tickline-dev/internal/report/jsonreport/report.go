@@ -10,18 +10,19 @@ import (
 	"github.com/MichalPlanetaDev/tickline/tools/tickline-dev/internal/runner"
 )
 
-const SchemaVersion = 1
+const SchemaVersion = 2
 
 type document struct {
-	SchemaVersion int             `json:"schema_version"`
-	RunID         string          `json:"run_id"`
-	Status        runner.Status   `json:"status"`
-	StartedAt     string          `json:"started_at"`
-	DurationMS    int64           `json:"duration_ms"`
-	Interrupted   bool            `json:"interrupted"`
-	LogDirectory  string          `json:"log_directory"`
-	ResultPath    string          `json:"result_path"`
-	Stages        []stageDocument `json:"stages"`
+	SchemaVersion        int             `json:"schema_version"`
+	RunID                string          `json:"run_id"`
+	Status               runner.Status   `json:"status"`
+	StartedAt            string          `json:"started_at"`
+	DurationMS           int64           `json:"duration_ms"`
+	Interrupted          bool            `json:"interrupted"`
+	LogDirectory         string          `json:"log_directory"`
+	ResultPath           string          `json:"result_path"`
+	ArtifactManifestPath string          `json:"artifact_manifest_path"`
+	Stages               []stageDocument `json:"stages"`
 }
 
 type stageDocument struct {
@@ -87,15 +88,16 @@ func Marshal(
 	}
 
 	report := document{
-		SchemaVersion: SchemaVersion,
-		RunID:         result.RunID,
-		Status:        result.Status,
-		StartedAt:     formatTime(result.StartedAt),
-		DurationMS:    result.Duration.Milliseconds(),
-		Interrupted:   result.Status == runner.StatusCancelled,
-		LogDirectory:  result.LogDirectory,
-		ResultPath:    result.ResultPath,
-		Stages:        stages,
+		SchemaVersion:        SchemaVersion,
+		RunID:                result.RunID,
+		Status:               result.Status,
+		StartedAt:            formatTime(result.StartedAt),
+		DurationMS:           result.Duration.Milliseconds(),
+		Interrupted:          result.Status == runner.StatusCancelled,
+		LogDirectory:         result.LogDirectory,
+		ResultPath:           result.ResultPath,
+		ArtifactManifestPath: result.ArtifactManifestPath,
+		Stages:               stages,
 	}
 
 	data, err := json.MarshalIndent(
