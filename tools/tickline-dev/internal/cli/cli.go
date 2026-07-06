@@ -57,6 +57,9 @@ func Run(args []string, dependencies Dependencies) int {
 	case "check":
 		return runCheck(args[1:], dependencies)
 
+	case "workflow":
+		return runWorkflow(args[1:], dependencies)
+
 	default:
 		fmt.Fprintf(
 			dependencies.Stderr,
@@ -78,6 +81,7 @@ Usage:
 
 Commands:
   check       Run project verification
+  workflow    Inspect named operational workflows
   version     Print the developer-console version
   help        Show this help
 
@@ -88,6 +92,10 @@ Check options:
   --json          Emit one versioned JSON result document
   --only <ids>    Select comma-separated stages
   --skip <ids>    Skip comma-separated stages
+
+Workflow commands:
+  workflow list
+  workflow show <workflow-id>
 
 Mode selection:
   A compatible interactive terminal uses the TUI automatically.
