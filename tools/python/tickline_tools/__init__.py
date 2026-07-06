@@ -9,6 +9,16 @@ from .analytics import (
     TickStatistics,
     analyze_investigation,
 )
+from .baseline import (
+    InvestigationBaseline,
+    InvestigationBaselineError,
+    MetricBaseline,
+    OutlierAnalysis,
+    OutlierFinding,
+    OutlierPolicy,
+    build_investigation_baseline,
+    evaluate_investigation_outliers,
+)
 from .investigation_bundle import (
     SUPPORTED_SCHEMA_VERSION,
     InvestigationBundle,
@@ -23,18 +33,26 @@ from .investigation_bundle import (
 __all__ = [
     "SUPPORTED_SCHEMA_VERSION",
     "CommandTypeStatistics",
+    "InvestigationBaseline",
+    "InvestigationBaselineError",
     "InvestigationBundle",
     "InvestigationBundleValidationError",
     "InvestigationEvidenceRecord",
     "InvestigationSession",
     "InvestigationStatistics",
+    "MetricBaseline",
     "OutcomeStatistics",
+    "OutlierAnalysis",
+    "OutlierFinding",
+    "OutlierPolicy",
     "RejectionCodeStatistics",
     "ReplaySummary",
     "SessionStatistics",
     "TickStatistics",
     "__version__",
     "analyze_investigation",
+    "build_investigation_baseline",
+    "evaluate_investigation_outliers",
     "load_investigation_bundle",
     "parse_investigation_bundle_json",
 ]
