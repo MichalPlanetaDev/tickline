@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 
 project(
     Tickline
-    VERSION 0.7.0
+    VERSION 0.8.0
     DESCRIPTION "Deterministic security-engineering range"
     LANGUAGES CXX
 )

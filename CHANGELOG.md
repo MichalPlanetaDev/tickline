@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.8.0] - 2026-07-06
+
+### Added
+
+- Strict schema-version-1 investigation-bundle validation in Python.
+- Deterministic investigation, session, command-type, rejection-code, and tick statistics.
+- Verified multi-investigation baselines with duplicate and candidate-leakage protection.
+- Median and median-absolute-deviation metric distributions.
+- Explainable modified-z and explicit zero-MAD-tolerance outlier findings.
+- Human review dispositions, rationales, reviewers, timestamps, and evidence references.
+- Deterministic schema-versioned JSON analytics reports.
+- Analytics command-line interface and repository-local launcher.
+- Documentation for trust boundaries, methodology, report contracts, and limitations.
+- Python coverage for validation, statistics, baselines, outliers, reviews, reporting, CLI behavior, and launcher execution.
+
+### Limitations
+
+- Analytics findings are investigation inputs, not automatic security verdicts.
+- No machine-learning model, automatic causal inference, production alerting, or remote analytics service is included.
+- Baselines do not automatically compensate for different environments or workloads.
+- Investigation bundles are not digitally signed and do not prove evidence authorship.
+- Authentication, transport encryption, key management, collision validation, and production anti-cheat deployment remain out of scope.
+
 ## [0.7.0] - 2026-07-06
 
 ### Added
