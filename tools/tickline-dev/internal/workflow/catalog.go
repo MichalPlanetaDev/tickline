@@ -96,6 +96,13 @@ func BuiltInCatalog() Catalog {
 						Required:    true,
 					},
 					{
+						ID:          "artifact-manifest",
+						Label:       "Artifact integrity manifest",
+						PathPattern: "reports/check-local/<run-id>/artifacts.json",
+						Description: "Stable size and SHA-256 inventory for the result and stage logs.",
+						Required:    true,
+					},
+					{
 						ID:          "combined-stage-log",
 						Label:       "Combined stage log",
 						PathPattern: "reports/check-local/<run-id>/<stage-id>.combined.log",

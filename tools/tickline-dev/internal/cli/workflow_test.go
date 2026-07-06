@@ -226,9 +226,9 @@ func TestWorkflowShowWritesResolvedJSON(
 		}
 	}
 
-	if len(document.Workflow.Artifacts) != 3 {
+	if len(document.Workflow.Artifacts) != 4 {
 		t.Fatalf(
-			"expected 3 artifacts, got %d",
+			"expected 4 artifacts, got %d",
 			len(document.Workflow.Artifacts),
 		)
 	}
