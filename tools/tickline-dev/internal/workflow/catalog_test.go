@@ -87,9 +87,9 @@ func TestReleaseReadinessResolvesManifestPlan(
 		}
 	}
 
-	if len(plan.Definition.Artifacts) != 3 {
+	if len(plan.Definition.Artifacts) != 4 {
 		t.Fatalf(
-			"expected 3 artifact definitions, got %d",
+			"expected 4 artifact definitions, got %d",
 			len(plan.Definition.Artifacts),
 		)
 	}

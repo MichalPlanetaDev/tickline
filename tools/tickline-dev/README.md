@@ -123,7 +123,8 @@ The directory contains:
 
 - separate standard-output and standard-error logs for each executed stage;
 - a combined log for each executed stage;
-- `result.json`, the canonical versioned run result.
+- `result.json`, the canonical versioned run result;
+- `artifacts.json`, the size and SHA-256 integrity inventory for the result and stage logs.
 
 Generated reports are intentionally excluded from Git.
 
