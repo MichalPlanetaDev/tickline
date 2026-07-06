@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 
 project(
     Tickline
-    VERSION 0.6.0
+    VERSION 0.7.0
     DESCRIPTION "Deterministic security-engineering range"
     LANGUAGES CXX
 )
@@ -260,6 +260,7 @@ target_sources(
     tickline_core
     PRIVATE
         cpp/src/storage/investigation_store.cpp
+        cpp/src/storage/investigation_bundle_exporter.cpp
 )
 
 target_link_libraries(
@@ -271,4 +272,15 @@ target_link_libraries(
 tickline_add_test(
     tickline_investigation_store_tests
     cpp/tests/investigation_store_tests.cpp
+)
+
+tickline_add_test(
+    tickline_investigation_bundle_exporter_tests
+    cpp/tests/investigation_bundle_exporter_tests.cpp
+)
+
+target_compile_definitions(
+    tickline_investigation_bundle_exporter_tests
+    PRIVATE
+        TICKLINE_UNITY_BUNDLE_FIXTURE=\"${CMAKE_CURRENT_SOURCE_DIR}/unity/TicklineForensics/Assets/Tickline/Forensics/Tests/EditMode/Fixtures/valid-investigation-bundle.json\"
 )

@@ -55,8 +55,10 @@ struct EvidenceArchiveImportResult final {
 struct EvidenceArchiveSummary final {
     std::int64_t archive_id;
     std::string source;
+    std::string imported_at_utc;
     std::size_t record_count;
     security::Sha256Digest archive_digest;
+    security::Sha256Digest trusted_head;
     security::Sha256Digest chain_head;
 
     friend bool operator==(

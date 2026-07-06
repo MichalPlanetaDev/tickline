@@ -935,7 +935,8 @@ public:
         }
 
         std::string sql =
-            "SELECT archive_id, source, record_count, archive_digest, declared_head "
+            "SELECT archive_id, source, imported_at_utc, record_count, "
+            "archive_digest, trusted_head, declared_head "
             "FROM evidence_archives";
 
         if (before_archive_id.has_value()) {
@@ -960,14 +961,18 @@ public:
             result.push_back(EvidenceArchiveSummary{
                 .archive_id = statement.column_int64(0),
                 .source = statement.column_text(1),
+                .imported_at_utc = statement.column_text(2),
                 .record_count = checked_size(
-                    statement.column_int64(2),
+                    statement.column_int64(3),
                     "archive record count"),
                 .archive_digest = statement.column_digest(
-                    3,
-                    "archive digest"),
-                .chain_head = statement.column_digest(
                     4,
+                    "archive digest"),
+                .trusted_head = statement.column_digest(
+                    5,
+                    "archive trusted head"),
+                .chain_head = statement.column_digest(
+                    6,
                     "archive chain head"),
             });
         }
