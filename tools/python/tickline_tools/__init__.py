@@ -1,5 +1,14 @@
 """Python support tools for Tickline analysis and automation."""
 
+from .analytics import (
+    CommandTypeStatistics,
+    InvestigationStatistics,
+    OutcomeStatistics,
+    RejectionCodeStatistics,
+    SessionStatistics,
+    TickStatistics,
+    analyze_investigation,
+)
 from .investigation_bundle import (
     SUPPORTED_SCHEMA_VERSION,
     InvestigationBundle,
@@ -13,12 +22,19 @@ from .investigation_bundle import (
 
 __all__ = [
     "SUPPORTED_SCHEMA_VERSION",
+    "CommandTypeStatistics",
     "InvestigationBundle",
     "InvestigationBundleValidationError",
     "InvestigationEvidenceRecord",
     "InvestigationSession",
+    "InvestigationStatistics",
+    "OutcomeStatistics",
+    "RejectionCodeStatistics",
     "ReplaySummary",
+    "SessionStatistics",
+    "TickStatistics",
     "__version__",
+    "analyze_investigation",
     "load_investigation_bundle",
     "parse_investigation_bundle_json",
 ]
