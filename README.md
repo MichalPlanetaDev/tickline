@@ -6,11 +6,12 @@ It is not a cheat project, bypass project, malware project, or reverse-engineeri
 
 ## Current release
 
-**v0.6.0 — Investigation storage and query layer**
+**v0.7.0 — Unity forensic replay viewer**
 
-The current release adds a migration-managed SQLite investigation repository for verified evidence archives, transactional and idempotent imports, persisted session and replay metadata, integrity constraints, pagination and filtering, corruption detection, and rollback coverage.
+The current release adds a deterministic native-to-Unity investigation-bundle pipeline and a read-only Unity Editor forensic replay viewer. It provides schema validation, transactional loading, session and outcome filters, evidence-chain inspection, trusted-head verification status, deterministic timeline selection, stepping, seeking, playback-speed controls, and replay metadata inspection.
 
-The deterministic simulation, authoritative command pipeline, protocol parser, SHA-256 evidence chain, forensic replay, developer console, sanitizer builds, and Docker verification remain part of the complete system.
+The deterministic simulation, authoritative command pipeline, protocol parser, SHA-256 evidence chain, SQLite investigation repository, native bundle exporter, developer console, sanitizer builds, Docker verification, and Unity EditMode tests remain part of the complete system.
+
 ## Security thesis
 
 Tickline models this trust chain:
@@ -177,11 +178,13 @@ The current release does not provide:
 - digital signatures or key management;
 - a concurrent multi-process ingestion service;
 - a remote investigation API;
-- Unity visualization;
+- a standalone or runtime Unity application;
+- hosted Unity execution in GitHub Actions;
 - collision or hit validation;
 - production anti-cheat deployment.
 
-The SQLite repository is a local investigation and query layer. It is not presented as a production multi-tenant service or as proof of evidence authorship.
+The Unity viewer is a read-only Editor investigation client. The SQLite repository remains a local investigation and query layer. Neither component is presented as a production multi-tenant service or as proof of evidence authorship.
+
 ## Repository layout
 
 ```text
@@ -207,7 +210,8 @@ tools/
   python/
   tickline-dev/
 
-unity-viewer/
+unity/
+  TicklineForensics/
 ```
 
 ## Local verification
@@ -284,13 +288,13 @@ tickline-dev check --only cpp,go
 | `v0.3.0` | Developer console foundation | Go verification console, shared manifest, TUI, JSON reports, cancellation and logs |
 | `v0.4.0` | Authoritative command pipeline | Command admission, replay protection, evidence archives, SHA-256 chain and forensic replay |
 | `v0.5.0` | Protocol boundary and parser hardening | Strict framing, bounded decoding, incremental stream parsing, malformed-input tests and fuzzing |
+| `v0.6.0` | Investigation storage and query layer | SQLite schema, verified imports, evidence queries, persisted replay metadata and integrity checks |
+| `v0.7.0` | Unity forensic replay viewer | Native JSON export, Unity validation, transactional loading, timeline playback and evidence inspection |
 
 ## Planned milestones
 
 | Version | Milestone | Intended scope |
 |---|---|---|
-| `v0.6.0` | Investigation storage and query layer | SQLite schema, import path, queries and service contracts |
-| `v0.7.0` | Unity forensic replay viewer | Timeline replay, state inspection and evidence visualization |
 | `v0.8.0` | Analytics and statistics | Python reports, baselines, outlier analysis and false-positive review |
 | `v0.9.0` | Runtime diagnostics and service hardening | Docker runtime, diagnostics, observability and operational failure tests |
 | `v1.0.0` | Portfolio release | Reproducible demonstration, screenshots, documentation freeze and final review |
@@ -309,7 +313,8 @@ The roadmap is subordinate to verified implementation. Features are not consider
 - `docs/debugging-workflow.md` — local diagnosis workflow;
 - `docs/github-workflow.md` — issue, branch, review, and release workflow;
 - `docs/release-process.md` — release invariants and exact release procedure;
-- `docs/releases/v0.4.0.md` — release notes for the current milestone.
+- `docs/unity-forensic-viewer.md` — native bundle contract, Unity validation, timeline, workspace, lifecycle, and Editor viewer;
+- `docs/releases/v0.7.0.md` — release notes for the current milestone.
 
 ## Defensive scope
 

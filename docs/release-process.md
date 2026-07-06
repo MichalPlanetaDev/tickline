@@ -142,6 +142,12 @@ docker compose -f infra/docker/compose.yml build
 docker compose -f infra/docker/compose.yml run --rm smoke
 ```
 
+For milestones that include the Unity forensic viewer, also run:
+
+    bash scripts/check-unity.sh
+
+The Unity gate is separate from `check-local.sh` because it requires an installed and licensed Windows Unity Editor. The WSL runner stages a disposable project mirror on the Windows temporary filesystem.
+
 Do not list checks in release notes unless they actually ran.
 
 ## Documentation review

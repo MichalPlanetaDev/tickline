@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.7.0] - 2026-07-06
+
+### Added
+
+- Deterministic C++ investigation-bundle export from verified SQLite archives.
+- Schema-versioned native-to-Unity JSON compatibility contract.
+- Unity bundle loading and structural, identity, integer, digest, chain, and replay validation.
+- Deterministic replay timeline with play, pause, step, seek, reset, and speed controls.
+- Session, outcome, command, replay, archive, and evidence-chain inspection models.
+- Transactional loading that preserves the active investigation after rejected replacement input.
+- Unity Editor forensic replay window with filters, timeline selection, integrity status, and digest inspection.
+- Unity EditMode coverage and a WSL-compatible Windows staging test runner.
+
+### Limitations
+
+- The viewer is Editor-only and read-only.
+- Unity verification requires a locally installed and licensed Windows Unity Editor.
+- Hosted Unity execution is not configured in GitHub Actions.
+- Remote investigation services, authentication, encryption, digital signatures, evidence repair, collision validation, and production anti-cheat deployment remain out of scope.
+
 ## [0.6.0] - 2026-07-05
 
 ### Added
