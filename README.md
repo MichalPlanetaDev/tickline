@@ -278,6 +278,19 @@ tickline-dev check --json
 tickline-dev check --only cpp,go
 ```
 
+
+## Investigation analytics
+
+The Python analytics layer consumes validated investigation bundles and produces deterministic descriptive statistics, verified multi-investigation baselines, explainable outlier findings, optional false-positive reviews, and schema-versioned JSON reports.
+
+Run the command-line interface through the repository-local launcher:
+
+    bash scripts/tickline-analytics.sh --help
+
+The native C++ layer remains authoritative for evidence verification, deterministic replay, storage, and bundle export. Analytics findings are review inputs rather than automatic security verdicts.
+
+See `docs/analytics.md` for the input contract, baseline methodology, outlier policy, review schema, report contract, and limitations.
+
 ## Release history
 
 | Version | Milestone | Delivered scope |
@@ -314,6 +327,7 @@ The roadmap is subordinate to verified implementation. Features are not consider
 - `docs/github-workflow.md` — issue, branch, review, and release workflow;
 - `docs/release-process.md` — release invariants and exact release procedure;
 - `docs/unity-forensic-viewer.md` — native bundle contract, Unity validation, timeline, workspace, lifecycle, and Editor viewer;
+- `docs/analytics.md` — validated analytics input, descriptive statistics, baseline policy, outlier evaluation, review workflow, and report contract;
 - `docs/releases/v0.7.0.md` — release notes for the current milestone.
 
 ## Defensive scope
