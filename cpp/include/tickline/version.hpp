@@ -15,8 +15,8 @@ struct Version {
 [[nodiscard]] constexpr Version project_version() noexcept
 {
     return Version{
-        .major = 0,
-        .minor = 8,
+        .major = 1,
+        .minor = 0,
         .patch = 0,
         .channel = "",
     };

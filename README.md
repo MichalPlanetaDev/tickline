@@ -1,346 +1,394 @@
+<div align="center">
+
 # Tickline
 
-Tickline is a lawful, defensive security-engineering range built around deterministic authoritative simulation, strict command admission, evidence integrity, forensic replay, and reproducible engineering workflow.
-
-It is not a cheat project, bypass project, malware project, or reverse-engineering target for third-party software. Adversarial tests operate only against code and artifacts owned by this repository.
+### Deterministic security engineering from untrusted input to verifiable evidence
+
+A defensive, portfolio-scale reference system for authoritative simulation,
+protocol hardening, evidence integrity, forensic replay, investigation
+analytics, and reproducible engineering workflows.
+
+[![CI](https://github.com/MichalPlanetaDev/tickline/actions/workflows/ci.yml/badge.svg)](https://github.com/MichalPlanetaDev/tickline/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/MichalPlanetaDev/tickline?display_name=tag&sort=semver)](https://github.com/MichalPlanetaDev/tickline/releases/latest)
+[![C++23](https://img.shields.io/badge/C%2B%2B-23-00599C?logo=cplusplus&logoColor=white)](cpp/)
+[![Go](https://img.shields.io/badge/Go-developer_console-00ADD8?logo=go&logoColor=white)](tools/tickline-dev/)
+[![Python](https://img.shields.io/badge/Python-analytics-3776AB?logo=python&logoColor=white)](tools/python/)
+[![Unity](https://img.shields.io/badge/Unity-forensic_viewer-000000?logo=unity&logoColor=white)](unity/)
+[![Docker](https://img.shields.io/badge/Docker-verification-2496ED?logo=docker&logoColor=white)](infra/docker/)
+[![SQLite](https://img.shields.io/badge/SQLite-investigations-003B57?logo=sqlite&logoColor=white)](docs/investigation-storage.md)
+[![License](https://img.shields.io/badge/license-see_LICENSE-informational)](LICENSE)
+
+[Architecture](docs/architecture.md) ·
+[Threat model](docs/threat-model.md) ·
+[Developer console](docs/developer-console.md) ·
+[Unity viewer](docs/unity-forensic-viewer.md) ·
+[Analytics](docs/analytics.md) ·
+[Latest release](https://github.com/MichalPlanetaDev/tickline/releases/latest)
+
+</div>
+
+---
+
+## Overview
+
+Tickline models a complete defensive trust chain around an authoritative,
+deterministic simulation.
+
+It accepts an untrusted byte stream, performs bounded protocol parsing and
+strict command validation, admits valid commands into authoritative state,
+records every outcome in canonical evidence, persists verified investigations,
+supports deterministic replay, exposes a read-only Unity forensic workspace,
+and produces explainable Python analytics.
+
+The project is deliberately built as a multi-language engineering system rather
+than a collection of disconnected demonstrations.
+
+**Current release: `v1.0.0 — Portfolio release`**
+
+The v1.0.0 milestone freezes the implemented architecture, aligns all component
+versions, removes known compiler warnings, expands CI coverage, and presents the
+system through a consolidated recruiter-facing project document.
+
+## Why this project exists
+
+Security-sensitive multiplayer and simulation systems cannot trust clients to
+decide authoritative state.
+
+Tickline demonstrates how to move responsibility across explicit trust
+boundaries:
+
+- raw network-like input is treated as hostile;
+- parsing is bounded and schema-aware;
+- commands are validated before state mutation;
+- replay and sequence abuse are rejected;
+- simulation behavior is deterministic;
+- accepted and rejected submissions produce evidence;
+- evidence is chained and verified against a trusted head;
+- investigations are imported transactionally;
+- replay reproduces behavior rather than merely displaying stored claims;
+- analytics produces review inputs, not automatic verdicts;
+- local verification produces persistent, integrity-checked artifacts.
+
+## Architecture
+
+~~~mermaid
+flowchart LR
+    A[Untrusted byte stream]
+    B[Bounded frame reassembly]
+    C[Strict envelope decoding]
+    D[Identity and schema validation]
+    E[Session replay protection]
+    F[Authoritative command admission]
+    G[Deterministic simulation]
+    H[Canonical evidence record]
+    I[SHA-256 evidence chain]
+    J[Verified binary archive]
+    K[SQLite investigation store]
+    L[Native investigation bundle]
+    M[Unity forensic replay]
+    N[Python analytics]
+
+    A --> B --> C --> D --> E --> F --> G
+    F --> H
+    G --> H
+    H --> I --> J --> K --> L
+    L --> M
+    L --> N
+~~~
+
+The Go developer console operates across the repository as the verification and
+workflow control plane:
+
+~~~mermaid
+flowchart TD
+    CLI[tickline-dev]
+    PLAN[Dependency-aware task planner]
+    RUN[Process supervisor]
+    LOGS[Per-stage logs]
+    RESULT[result.json]
+    MANIFEST[artifacts.json]
+    VERIFY[Artifact verification]
+
+    CLI --> PLAN --> RUN
+    RUN --> LOGS
+    RUN --> RESULT
+    LOGS --> MANIFEST
+    RESULT --> MANIFEST
+    MANIFEST --> VERIFY
+~~~
 
-## Current release
-
-**v0.8.0 — Analytics and statistics**
-
-The current release adds strict Python ingestion for schema-versioned investigation bundles, deterministic descriptive statistics, verified multi-investigation baselines, explainable outlier findings, explicit false-positive review metadata, versioned JSON reports, and a repository-local analytics command-line interface.
-
-The deterministic simulation, authoritative command pipeline, protocol parser, SHA-256 evidence chain, SQLite investigation repository, native bundle exporter, Unity forensic viewer, developer console, sanitizer builds, Docker verification, and Unity EditMode tests remain part of the complete system.
-
-## Security thesis
-
-Tickline models this trust chain:
+## Delivered capabilities
 
-```text
-untrusted byte stream
-        |
-        v
-bounded frame reassembly
-        |
-        v
-strict frame and payload decoding
-        |
-        v
-typed command boundary
-        |
-        v
-identity, schema, sequence, timing, and payload validation
-        |
-        v
-authoritative world admission
-        |
-        v
-deterministic simulation state
-        |
-        v
-canonical evidence record
-        |
-        v
-SHA-256 evidence chain
-        |
-        v
-verified binary archive
-        |
-        v
-deterministic forensic replay
-```
+| Area | Implementation |
+|---|---|
+| Deterministic simulation | Fixed ticks, integer units, scheduled commands, bounded state, transactional advancement and stable state fingerprints |
+| Command admission | Typed envelopes, identity checks, schema validation, timing rules, sequence protection and stable rejection codes |
+| Protocol hardening | Fixed headers, bounded incremental parsing, exact payload decoding, malformed-input regression coverage and fuzz corpus testing |
+| Evidence integrity | Canonical records for accepted and rejected submissions, SHA-256 chaining, trusted-head verification and strict archive decoding |
+| Investigation storage | Migration-managed SQLite schema, transactional verified imports, filtering, pagination and corruption detection |
+| Forensic replay | Trusted-state reconstruction, replay limits, mismatch detection and forged-outcome detection |
+| Unity tooling | Read-only Editor viewer with transactional bundle loading, filtering, playback, seeking and integrity inspection |
+| Analytics | Deterministic descriptive statistics, robust baselines, modified-z findings, explicit zero-MAD handling and human review metadata |
+| Developer console | Diagnostics, plan inspection, TUI/plain/JSON output, workflow execution, cancellation and persisted run artifacts |
+| Engineering workflow | CMake, CTest, sanitizers, Go race testing, Python tests, Docker smoke builds and GitHub Actions |
 
-A client may request an action. It does not authoritatively decide simulation state, validation results, or evidence.
+## Technology stack
 
-## Implemented components
+| Layer | Technologies |
+|---|---|
+| Core systems | C++23, CMake, CTest |
+| Security and integrity | SHA-256, canonical binary encoding, strict parsing, sanitizer and fuzz testing |
+| Storage | SQLite |
+| Tooling and orchestration | Go, Bubble Tea, Linux process groups |
+| Analytics | Python standard library |
+| Visualization | C#, Unity Editor tooling |
+| Delivery and verification | Bash, Docker, GitHub Actions, WSL/Linux |
 
-### Deterministic simulation
+## Verification model
 
-The C++ simulation core supports:
+Tickline uses one repository-level quality gate:
 
-- fixed-duration ticks;
-- checked elapsed-time progression;
-- non-zero entity identifiers;
-- integer millimeter and microsecond units;
-- scheduled velocity commands;
-- per-entity sequence and target-tick tracking;
-- bounded velocity and position;
-- fractional displacement preservation;
-- atomic world advancement;
-- canonical state encoding;
-- deterministic state fingerprints.
+    bash scripts/check-local.sh
 
-The state fingerprint is intended for deterministic comparison and replay checks. It is not a cryptographic authentication mechanism.
+The gate runs:
 
-### Command envelope and validation
+1. documentation validation;
+2. C++ configuration, build and CTest;
+3. AddressSanitizer and UndefinedBehaviorSanitizer tests;
+4. Python unit tests;
+5. Go unit tests, race detector and `go vet`;
+6. Docker smoke-image verification.
 
-Each command envelope carries:
+A successful console execution persists evidence under:
 
-- command schema version;
-- command type;
-- client identifier;
-- session identifier;
-- session sequence;
-- target simulation tick;
-- entity identifier;
-- typed velocity payload.
+    reports/check-local/<run-id>/
 
-The stateless validator rejects unsupported schemas and command types, invalid or mismatched identities, zero sequences, stale ticks, excessive future ticks, and out-of-range velocity.
+Each run contains:
 
-### Session replay protection
+- separate stdout and stderr logs for executed stages;
+- combined per-stage logs;
+- canonical `result.json`;
+- `artifacts.json` with artifact kinds, sizes and SHA-256 digests.
 
-A `CommandSession` owns the highest accepted sequence for one authenticated client/session pair.
+Verify a run manifest with:
 
-It distinguishes:
+    build/tools/tickline-dev/tickline-dev \
+      artifacts verify \
+      reports/check-local/<run-id>/artifacts.json
 
-- duplicate sequence;
-- sequence regression;
-- valid strictly increasing sequence.
+The artifact manifest detects changes relative to the supplied manifest. It is
+not a digital signature and does not establish authorship, provenance or trust
+in the manifest itself.
 
-Sequence gaps are allowed. A sequence is committed only after authoritative world admission succeeds.
-
-### Authoritative submission pipeline
+## Quick start
 
-`AuthoritativeCommandPipeline` coordinates:
+### Prerequisites
 
-1. session-level validation;
-2. replay checks;
-3. translation into a simulation command;
-4. authoritative world admission;
-5. session-sequence commit;
-6. evidence generation.
+The complete local gate expects:
 
-A rejected submission does not commit session replay state. World-level rejections do not consume a session sequence.
+- Linux or WSL;
+- a C++23-capable compiler;
+- CMake;
+- SQLite development headers;
+- Python 3;
+- Go as declared by `tools/tickline-dev/go.mod`;
+- Docker.
 
-### Evidence integrity
+Unity verification additionally requires a locally installed and licensed
+Windows Unity Editor.
 
-Every submission produces a fixed-size canonical evidence record, including rejected submissions.
+### Clone and verify
 
-Evidence records contain:
+    git clone https://github.com/MichalPlanetaDev/tickline.git
+    cd tickline
+    bash scripts/check-local.sh
 
-- pre-submission world fingerprint;
-- observed simulation tick;
-- full command envelope;
-- session sequence before and after;
-- pending-command count before and after;
-- stable rejection code;
-- raw queue outcome.
+### Build the C++ core
 
-Records are linked with SHA-256. Verification requires an independently trusted expected chain head.
+    cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+    cmake --build build --parallel
+    ctest --test-dir build --output-on-failure
 
-The chain detects modification relative to that trusted head. It does not prove who produced the archive and is not a digital signature.
+### Build the developer console
 
-### Evidence archives
+    bash scripts/build-tickline-dev.sh
 
-The binary archive format provides:
+    build/tools/tickline-dev/tickline-dev version
+    build/tools/tickline-dev/tickline-dev doctor
+    build/tools/tickline-dev/tickline-dev check --plan
+    build/tools/tickline-dev/tickline-dev check --plain
 
-- archive magic and schema;
-- embedded record schema and size;
-- record count;
-- declared SHA-256 chain head;
-- fixed-size canonical records;
-- exact-length validation;
-- truncation detection;
-- trailing-data rejection;
-- strict record decoding;
-- chain verification;
-- trusted-head comparison.
+### Run the release-readiness workflow
 
-### Forensic replay
+    build/tools/tickline-dev/tickline-dev \
+      workflow run \
+      --plain \
+      release-readiness
 
-The evidence replayer accepts:
+### Run Unity EditMode verification
 
-- a trusted initial `CommandSession`;
-- a trusted initial `World`;
-- verified evidence records;
-- a trusted evidence-chain head.
+    bash scripts/check-unity.sh
 
-It reconstructs observed tick progression and command submission, then compares regenerated records with archived records.
-
-Replay detects:
-
-- invalid chain linkage;
-- tick regression;
-- excessive replay work;
-- simulation-advance failure;
-- initial-session mismatch;
-- pending-command mismatch;
-- world-state mismatch;
-- forged submission outcomes.
-
-## Important limitations
-
-The current release does not provide:
-
-- a production TCP or UDP server;
-- authenticated remote sessions;
-- transport encryption;
-- digital signatures or key management;
-- a concurrent multi-process ingestion service;
-- a remote investigation API;
-- a standalone or runtime Unity application;
-- hosted Unity execution in GitHub Actions;
-- collision or hit validation;
-- production anti-cheat deployment.
-
-The Unity viewer is a read-only Editor investigation client. The SQLite repository remains a local investigation and query layer. Neither component is presented as a production multi-tenant service or as proof of evidence authorship.
-
-## Repository layout
-
-```text
-cpp/
-  include/tickline/
-    command/
-    security/
-    simulation/
-  src/
-  tests/
-
-docs/
-  decisions/
-  releases/
-
-infra/
-  docker/
-
-scripts/
-  checks/
-
-tools/
-  python/
-  tickline-dev/
-
-unity/
-  TicklineForensics/
-```
-
-## Local verification
-
-Run the complete repository gate:
-
-```bash
-bash scripts/check-local.sh
-```
-
-Run a faster local pass:
-
-```bash
-SKIP_SANITIZERS=1 SKIP_DOCKER=1 \
-  bash scripts/check-local.sh
-```
-
-Build and test only the C++ core:
-
-```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-cmake --build build --parallel
-ctest --test-dir build --output-on-failure
-```
-
-Run the sanitizer configuration:
-
-```bash
-cmake \
-  -S . \
-  -B build-sanitized \
-  -DCMAKE_BUILD_TYPE=Debug \
-  -DTICKLINE_ENABLE_SANITIZERS=ON
-
-cmake --build build-sanitized --parallel
-ctest --test-dir build-sanitized --output-on-failure
-```
-
-Build the developer console:
-
-```bash
-bash scripts/build-tickline-dev.sh
-```
+The Unity runner stages a disposable project mirror on the Windows temporary
+filesystem so repository assets are not modified by the Editor.
 
 ## Developer console
 
-`tickline-dev` provides one execution engine for:
+`tickline-dev` is not a second implementation of repository logic. It
+orchestrates the existing C++, Python, Go, documentation, sanitizer and Docker
+verification stages through one checked execution model.
 
-- plain terminal output;
-- versioned JSON reports;
-- interactive terminal UI;
-- dependency-aware stage selection;
-- process-group cancellation;
-- per-stage logs;
-- canonical `result.json` artifacts.
+Key commands:
 
-Examples:
+    tickline-dev doctor
+    tickline-dev check --plan
+    tickline-dev check --plain
+    tickline-dev check --json
+    tickline-dev check --only docs,go
+    tickline-dev workflow list
+    tickline-dev workflow show release-readiness
+    tickline-dev workflow run --plain release-readiness
+    tickline-dev artifacts verify <artifacts.json>
 
-```bash
-tickline-dev version
-tickline-dev check --plan
-tickline-dev check --plain
-tickline-dev check --json
-tickline-dev check --only cpp,go
-```
+The console supports automatic TUI selection, explicit plain or JSON output,
+dependency-aware stage selection, process-tree cancellation and stable exit
+codes.
 
+## Investigation and replay flow
 
-## Investigation analytics
+1. The C++ pipeline validates and executes a command.
+2. A canonical evidence record is produced for the outcome.
+3. Evidence records form a SHA-256-linked chain.
+4. Verified archives are imported into SQLite transactionally.
+5. The native exporter writes a schema-versioned investigation bundle.
+6. Unity validates and loads the bundle into a read-only forensic workspace.
+7. Python validates the same bundle before computing statistics or baselines.
+8. Findings may receive explicit human review dispositions and evidence links.
 
-The Python analytics layer consumes validated investigation bundles and produces deterministic descriptive statistics, verified multi-investigation baselines, explainable outlier findings, optional false-positive reviews, and schema-versioned JSON reports.
+This separation keeps evidence generation, persistence, visualization and
+analysis independently testable.
 
-Run the command-line interface through the repository-local launcher:
+## Repository layout
 
-    bash scripts/tickline-analytics.sh --help
+    cpp/
+      include/tickline/        Public C++ interfaces
+      src/                     Core implementation
+      tests/                   Native tests
 
-The native C++ layer remains authoritative for evidence verification, deterministic replay, storage, and bundle export. Analytics findings are review inputs rather than automatic security verdicts.
+    docs/
+      decisions/               Architecture decision records
+      releases/                Versioned release notes
 
-See `docs/analytics.md` for the input contract, baseline methodology, outlier policy, review schema, report contract, and limitations.
+    infra/
+      docker/                  Reproducible smoke environment
 
-## Release history
+    scripts/
+      checks/                  Individual verification stages
 
-| Version | Milestone | Delivered scope |
-|---|---|---|
-| `v0.1.0` | Blueprint and engineering skeleton | Repository structure, architecture, threat model, CI and workflow foundation |
-| `v0.1.1` | Local workflow and CI repair | Reproducible local checks and corrected CI behavior |
-| `v0.2.0` | Deterministic simulation core | Fixed ticks, integer state, scheduled commands, canonical state and tests |
-| `v0.3.0` | Developer console foundation | Go verification console, shared manifest, TUI, JSON reports, cancellation and logs |
-| `v0.4.0` | Authoritative command pipeline | Command admission, replay protection, evidence archives, SHA-256 chain and forensic replay |
-| `v0.5.0` | Protocol boundary and parser hardening | Strict framing, bounded decoding, incremental stream parsing, malformed-input tests and fuzzing |
-| `v0.6.0` | Investigation storage and query layer | SQLite schema, verified imports, evidence queries, persisted replay metadata and integrity checks |
-| `v0.7.0` | Unity forensic replay viewer | Native JSON export, Unity validation, transactional loading, timeline playback and evidence inspection |
-| `v0.8.0` | Analytics and statistics | Validated Python ingestion, descriptive statistics, robust baselines, explainable outliers, reviews and JSON reports |
+    tools/
+      python/                  Investigation analytics
+      tickline-dev/            Go developer console
 
-## Planned milestones
+    unity/
+      TicklineForensics/       Unity forensic viewer
 
-| Version | Milestone | Intended scope |
-|---|---|---|
-| `v0.9.0` | Runtime diagnostics and service hardening | Docker runtime, diagnostics, observability and operational failure tests |
-| `v1.0.0` | Portfolio release | Reproducible demonstration, screenshots, documentation freeze and final review |
+    unity-viewer/              Unity compatibility fixtures
 
-The roadmap is subordinate to verified implementation. Features are not considered delivered until code, tests, documentation, and release metadata agree.
+## Security boundaries
+
+Tickline permits defensive testing against code and artifacts owned by this
+repository, including:
+
+- malformed-input and parser-boundary testing;
+- replay and sequence-abuse testing;
+- invalid client-state claims;
+- evidence-tampering tests;
+- sanitizer and fuzz testing;
+- deterministic replay verification;
+- local Docker and Linux diagnostics.
+
+The repository does not provide:
+
+- third-party game targeting;
+- commercial anti-cheat bypasses;
+- credential theft or malware;
+- stealth persistence;
+- kernel evasion;
+- DMA tooling;
+- production-service attack instructions.
+
+See [SECURITY.md](SECURITY.md) and the
+[threat model](docs/threat-model.md) for the complete boundary.
+
+## Explicit limitations
+
+Tickline is a reference and portfolio system, not a production anti-cheat
+service.
+
+It does not include:
+
+- a production TCP or UDP service;
+- authenticated remote sessions;
+- transport encryption or key management;
+- digital signatures;
+- a multi-tenant investigation API;
+- hosted Unity execution in GitHub Actions;
+- collision or hit validation;
+- production monitoring or deployment infrastructure.
+
+The Unity viewer is Editor-only and read-only. Analytics findings are review
+inputs rather than automatic security verdicts.
 
 ## Documentation
 
-- `docs/architecture.md` — current system boundaries and component responsibilities;
-- `docs/simulation-model.md` — deterministic world and command execution model;
-- `docs/authoritative-command-pipeline.md` — command envelope, validation, submission, evidence, and replay;
-- `docs/evidence-integrity.md` — record chain and archive integrity model;
-- `docs/protocol.md` — implemented framing, decoding, stream parsing, and compatibility rules;
-- `docs/threat-model.md` — defensive scope and trust assumptions;
-- `docs/developer-console.md` — Go verification-console architecture;
-- `docs/debugging-workflow.md` — local diagnosis workflow;
-- `docs/github-workflow.md` — issue, branch, review, and release workflow;
-- `docs/release-process.md` — release invariants and exact release procedure;
-- `docs/unity-forensic-viewer.md` — native bundle contract, Unity validation, timeline, workspace, lifecycle, and Editor viewer;
-- `docs/analytics.md` — validated analytics input, descriptive statistics, baseline policy, outlier evaluation, review workflow, and report contract;
-- `docs/releases/v0.8.0.md` — release notes for the current milestone.
+| Document | Purpose |
+|---|---|
+| [Architecture](docs/architecture.md) | Component boundaries and responsibilities |
+| [Simulation model](docs/simulation-model.md) | Deterministic world and command execution |
+| [Command pipeline](docs/authoritative-command-pipeline.md) | Validation, admission, evidence and replay |
+| [Protocol](docs/protocol.md) | Framing, decoding and stream parsing |
+| [Protocol compatibility](docs/protocol-compatibility.md) | Native and managed contract rules |
+| [Evidence integrity](docs/evidence-integrity.md) | Canonical records, chaining and archive verification |
+| [Investigation storage](docs/investigation-storage.md) | SQLite persistence and query behavior |
+| [Unity forensic viewer](docs/unity-forensic-viewer.md) | Bundle validation, replay and Editor UI |
+| [Analytics](docs/analytics.md) | Statistics, baselines, outliers and reviews |
+| [Developer console](docs/developer-console.md) | Go console architecture and execution model |
+| [Threat model](docs/threat-model.md) | Defensive scope and trust assumptions |
+| [Release process](docs/release-process.md) | Release invariants and procedure |
 
-## Defensive scope
+## Release history
 
-Permitted work includes:
+<details>
+<summary>Show milestone history</summary>
 
-- malformed-input testing against Tickline;
-- replay and sequence-abuse tests;
-- invalid command claims;
-- evidence-tampering tests;
-- deterministic replay verification;
-- sanitizer and fuzz testing;
-- local Docker and Linux diagnostics;
-- defensive technical documentation.
+| Version | Milestone |
+|---|---|
+| `v0.1.0` | Blueprint and engineering skeleton |
+| `v0.1.1` | Local workflow and CI repair |
+| `v0.2.0` | Deterministic simulation core |
+| `v0.3.0` | Developer console foundation |
+| `v0.4.0` | Authoritative command pipeline |
+| `v0.5.0` | Protocol boundary and parser hardening |
+| `v0.6.0` | Investigation storage and query layer |
+| `v0.7.0` | Unity forensic replay viewer |
+| `v0.8.0` | Analytics and statistics |
+| `v0.9.0` | Runtime diagnostics and service hardening |
+| `v1.0.0` | Final portfolio release |
 
-The repository must not include malware, credential theft, third-party game targeting, commercial anti-cheat bypasses, stealth persistence, kernel evasion, DMA tooling, or instructions for attacking production services.
+</details>
+
+Detailed release notes are available in
+[`docs/releases`](docs/releases/) and on the
+[GitHub Releases page](https://github.com/MichalPlanetaDev/tickline/releases).
+
+## Project status
+
+`v1.0.0` is the completed portfolio baseline.
+
+Future changes should be narrowly scoped maintenance, documented extensions or
+clearly separated experimental work. Existing claims remain subordinate to
+verified code, tests and release evidence.
+
+## License
+
+See [LICENSE](LICENSE) for the repository's licensing terms.

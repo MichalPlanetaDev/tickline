@@ -1,5 +1,48 @@
 # Changelog
 
+## [1.0.0] - 2026-07-08
+
+### Added
+
+- Final recruiter-facing project README with architecture diagrams, capability
+  matrix, verification model, quick-start workflow and documentation index.
+- Complete GitHub Actions coverage for documentation, C++, sanitizers, Python,
+  Go, race detection, static analysis and Docker verification.
+- Final portfolio release notes and synchronized repository metadata.
+
+### Changed
+
+- Aligned CMake, C++, Python and Go version surfaces with v1.0.0.
+- Reworked developer-console documentation into a concise operational reference.
+- Clarified the project status, security boundaries and production limitations.
+- Consolidated the release roadmap into the completed portfolio baseline.
+
+### Fixed
+
+- Removed the release-build false-positive warning around optional queue results.
+- Removed signed-character conversion warnings from JSON string serialization.
+- Removed duplicated v0.9.0 release-process metadata.
+- Removed outdated current-release and planned-milestone claims.
+
+### Verification
+
+- Warning-free C++ release build.
+- C++ unit tests and sanitizer configurations.
+- Python unit tests.
+- Go unit tests, race detector and `go vet`.
+- Docker smoke build.
+- Developer-console release-readiness workflow.
+- Unity EditMode verification through the WSL-compatible runner.
+
+### Limitations
+
+- Tickline remains a defensive reference and portfolio system rather than a
+  production anti-cheat service.
+- Remote authentication, transport encryption, key management and digital
+  signatures are not included.
+- The Unity viewer remains Editor-only and read-only.
+- Hosted Unity execution is not configured in GitHub Actions.
+
 ## [0.9.0] - 2026-07-07
 
 ### Added

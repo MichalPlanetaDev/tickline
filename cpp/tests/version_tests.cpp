@@ -12,7 +12,7 @@ int main()
     static_assert(version.patch == 0);
     static_assert(version.channel.empty());
 
-    assert(tickline::version_string() == std::string{"0.8.0"});
+    assert(tickline::version_string() == std::string{"1.0.0"});
 
     return 0;
 }
