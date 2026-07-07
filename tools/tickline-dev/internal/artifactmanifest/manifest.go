@@ -417,17 +417,6 @@ func resolveExistingPath(
 		filepath.FromSlash(relativePath),
 	)
 
-	information, err := os.Lstat(candidate)
-	if err != nil {
-		return "", err
-	}
-
-	if information.Mode()&os.ModeSymlink != 0 {
-		return "", errors.New(
-			"artifact path is a symbolic link",
-		)
-	}
-
 	resolvedCandidate, err := filepath.EvalSymlinks(
 		candidate,
 	)

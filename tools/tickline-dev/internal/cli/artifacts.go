@@ -79,17 +79,13 @@ func persistRunArtifacts(
 		)
 	}
 
-	stageFinalizeError :=
-		logStore.FinalizeStageLogs()
-
 	var manifestBuildError error
 	var manifestMarshalError error
 	var manifestWriteError error
 
 	if logWriteError == nil &&
 		reportError == nil &&
-		resultWriteError == nil &&
-		stageFinalizeError == nil {
+		resultWriteError == nil {
 		manifest, err := artifactmanifest.Build(
 			repositoryRoot,
 			result.RunID,
@@ -120,7 +116,6 @@ func persistRunArtifacts(
 		logWriteError,
 		reportError,
 		resultWriteError,
-		stageFinalizeError,
 		manifestBuildError,
 		manifestMarshalError,
 		manifestWriteError,
