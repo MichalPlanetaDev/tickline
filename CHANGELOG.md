@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.9.0] - 2026-07-07
+
+### Added
+
+- Go-based developer console with plain, JSON, and interactive terminal output.
+- Declarative verification stages with dependency-aware execution planning.
+- Repository and toolchain diagnostics through the `doctor` command.
+- Operational workflow discovery, inspection, and execution.
+- Release-readiness workflow metadata and execution support.
+- Process-group cancellation with graceful termination and descendant cleanup.
+- Per-run stdout, stderr, and combined stage logs.
+- Canonical schema-version-2 JSON verification results.
+- Schema-version-1 artifact manifests with file sizes and SHA-256 digests.
+- Plain and JSON artifact verification through `artifacts verify`.
+- Unit, integration, race-detector, and static-analysis coverage.
+
+### Limitations
+
+- The console is repository-local tooling, not a remote orchestration service.
+- Artifact manifests are not digitally signed.
+- Integrity verification does not prove authorship, provenance, or authenticity.
+- Generated verification reports remain local and are excluded from Git.
+- Hosted Unity execution and production deployment remain outside this release.
+
 ## [0.8.0] - 2026-07-06
 
 ### Added
