@@ -215,6 +215,96 @@ func TestParseRejectsUnknownFields(
 	}
 }
 
+func TestBuildAndVerifyRejectSymbolicLinkArtifact(
+	t *testing.T,
+) {
+	root := t.TempDir()
+
+	targetPath :=
+		"reports/check-local/fixture/target.json"
+
+	linkPath :=
+		"reports/check-local/fixture/result.json"
+
+	writeFixture(
+		t,
+		root,
+		targetPath,
+		"{}\n",
+	)
+
+	absoluteTarget := filepath.Join(
+		root,
+		filepath.FromSlash(targetPath),
+	)
+
+	absoluteLink := filepath.Join(
+		root,
+		filepath.FromSlash(linkPath),
+	)
+
+	if err := os.Symlink(
+		filepath.Base(absoluteTarget),
+		absoluteLink,
+	); err != nil {
+		t.Skipf(
+			"symbolic links are unavailable: %v",
+			err,
+		)
+	}
+
+	_, err := Build(
+		root,
+		"fixture",
+		[]Target{
+			{
+				Path: linkPath,
+				Kind: KindResult,
+			},
+		},
+	)
+
+	if err == nil ||
+		!strings.Contains(
+			err.Error(),
+			"symbolic link",
+		) {
+		t.Fatalf(
+			"expected symbolic-link error, got %v",
+			err,
+		)
+	}
+
+	manifest, err := Build(
+		root,
+		"fixture",
+		[]Target{
+			{
+				Path: targetPath,
+				Kind: KindResult,
+			},
+		},
+	)
+	if err != nil {
+		t.Fatalf("build direct-file manifest: %v", err)
+	}
+
+	manifest.Artifacts[0].Path = linkPath
+
+	err = Verify(root, manifest)
+
+	if err == nil ||
+		!strings.Contains(
+			err.Error(),
+			"symbolic link",
+		) {
+		t.Fatalf(
+			"expected verification rejection, got %v",
+			err,
+		)
+	}
+}
+
 func writeFixture(
 	t *testing.T,
 	root string,
