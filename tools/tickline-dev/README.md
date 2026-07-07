@@ -123,7 +123,8 @@ The directory contains:
 
 - separate standard-output and standard-error logs for each executed stage;
 - a combined log for each executed stage;
-- `result.json`, the canonical versioned run result.
+- `result.json`, the canonical versioned run result;
+- `artifacts.json`, the size and SHA-256 integrity inventory for the result and stage logs.
 
 Generated reports are intentionally excluded from Git.
 
@@ -161,3 +162,42 @@ From the repository root:
 ```bash
 bash scripts/check-local.sh
 ```
+
+## Operational workflows and artifact verification
+
+Inspect repository and toolchain readiness:
+
+    tickline-dev doctor
+
+List and inspect operational workflows:
+
+    tickline-dev workflow list
+    tickline-dev workflow show release-readiness
+
+Run the release-readiness workflow:
+
+    tickline-dev
+
+Inspect repository and toolchain readiness:
+
+    tickline-dev doctor
+
+List and inspect operational workflows:
+
+    tickline-dev workflow list
+    tickline-dev workflow show release-readiness
+
+Run the release workflow run --plain release-readiness
+
+Verify a persisted artifact manifest:
+
+    tickline-dev artifacts verify reports/check-local/<run-id>/artifacts.json
+
+Emit a machine-readable verification result:
+
+    tickline-dev artifacts verify --json reports/check-local/<run-id>/artifacts.json
+
+The artifact manifest records file sizes and SHA-256 digests for the canonical
+run result and executed-stage logs. It detects changes relative to the
+manifest being verified. It is not a digital signature and does not establish
+authorship, provenance, or trust in the manifest itself.

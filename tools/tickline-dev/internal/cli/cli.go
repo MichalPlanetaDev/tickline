@@ -54,8 +54,17 @@ func Run(args []string, dependencies Dependencies) int {
 
 		return ExitSuccess
 
+	case "artifacts":
+		return runArtifacts(args[1:], dependencies)
+
 	case "check":
 		return runCheck(args[1:], dependencies)
+
+	case "doctor":
+		return runDoctor(args[1:], dependencies)
+
+	case "workflow":
+		return runWorkflow(args[1:], dependencies)
 
 	default:
 		fmt.Fprintf(
@@ -77,9 +86,15 @@ Usage:
   tickline-dev <command>
 
 Commands:
+  artifacts   Verify persisted run artifacts
   check       Run project verification
+  doctor      Inspect repository and toolchain readiness
+  workflow    Inspect and execute operational workflows
   version     Print the developer-console version
   help        Show this help
+
+Artifact commands:
+  artifacts verify [--json] <artifacts.json>
 
 Check options:
   --plan          Validate and display the execution plan
@@ -88,6 +103,11 @@ Check options:
   --json          Emit one versioned JSON result document
   --only <ids>    Select comma-separated stages
   --skip <ids>    Skip comma-separated stages
+
+Workflow commands:
+  workflow list
+  workflow show <workflow-id>
+  workflow run <workflow-id>
 
 Mode selection:
   A compatible interactive terminal uses the TUI automatically.

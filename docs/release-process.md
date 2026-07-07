@@ -28,6 +28,7 @@ v0.5.0  protocol boundary and parser hardening
 v0.6.0  investigation storage and API
 v0.7.0  Unity forensic replay viewer
 v0.8.0  analytics and statistics
+v0.9.0  runtime diagnostics and service hardening
 v0.9.0  runtime diagnostics and hardening
 v1.0.0  final portfolio release
 ```
