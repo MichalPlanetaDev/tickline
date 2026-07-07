@@ -48,13 +48,21 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Configure with sanitizers
-        run: cmake -S . -B build-sanitized -DCMAKE_BUILD_TYPE=Debug -DTICKLINE_ENABLE_SANITIZERS=ON
+        run: >
+          cmake
+          -S .
+          -B build-sanitized
+          -DCMAKE_BUILD_TYPE=Debug
+          -DTICKLINE_ENABLE_SANITIZERS=ON
 
       - name: Build with sanitizers
         run: cmake --build build-sanitized --parallel
 
       - name: Test with sanitizers
-        run: ctest --test-dir build-sanitized --output-on-failure
+        run: >
+          ctest
+          --test-dir build-sanitized
+          --output-on-failure
 
   python:
     name: python
@@ -65,7 +73,38 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Test Python tools
-        run: PYTHONPATH=tools/python python3 -m unittest discover -s tools/python/tests -v
+        run: >
+          PYTHONPATH=tools/python
+          python3 -m unittest
+          discover
+          -s tools/python/tests
+          -v
+
+  go:
+    name: go
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: tools/tickline-dev/go.mod
+          cache: false
+
+      - name: Test
+        run: go -C tools/tickline-dev test ./...
+
+      - name: Test with race detector
+        run: go -C tools/tickline-dev test -race ./...
+
+      - name: Vet
+        run: go -C tools/tickline-dev vet ./...
+
+      - name: Build developer console
+        run: bash scripts/build-tickline-dev.sh
 
   docker:
     name: docker
