@@ -54,6 +54,9 @@ func Run(args []string, dependencies Dependencies) int {
 
 		return ExitSuccess
 
+	case "artifacts":
+		return runArtifacts(args[1:], dependencies)
+
 	case "check":
 		return runCheck(args[1:], dependencies)
 
@@ -83,11 +86,15 @@ Usage:
   tickline-dev <command>
 
 Commands:
+  artifacts   Verify persisted run artifacts
   check       Run project verification
   doctor      Inspect repository and toolchain readiness
   workflow    Inspect and execute operational workflows
   version     Print the developer-console version
   help        Show this help
+
+Artifact commands:
+  artifacts verify [--json] <artifacts.json>
 
 Check options:
   --plan          Validate and display the execution plan
