@@ -77,4 +77,4 @@ __all__ = [
     "write_analysis_report_json",
 ]
 
-__version__ = "0.8.0"
+__version__ = "1.0.0"

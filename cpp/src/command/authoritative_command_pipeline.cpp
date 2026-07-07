@@ -66,9 +66,12 @@ CommandSubmissionResult::queue_result() const noexcept
 CommandSubmissionResult::CommandSubmissionResult(
     const CommandRejectionCode code,
     std::optional<simulation::QueueCommandResult> queue_result)
-    : code_{code},
-      queue_result_{queue_result}
+    : code_{code}
 {
+    if (queue_result.has_value()) {
+        queue_result_.emplace(
+            queue_result.value());
+    }
     if (!queue_result_.has_value()) {
         if (code_ == CommandRejectionCode::none) {
             throw std::invalid_argument{
