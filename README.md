@@ -2,9 +2,9 @@
 
 # Tickline
 
-### Deterministic security engineering from untrusted input to verifiable evidence
+### Deterministic security engineering portfolio project
 
-A defensive, portfolio-scale reference system for authoritative simulation,
+A defensive system for authoritative simulation,
 protocol hardening, evidence integrity, forensic replay, investigation
 analytics, and reproducible engineering workflows.
 
