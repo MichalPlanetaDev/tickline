@@ -267,6 +267,7 @@ func (runner Runner) runStage(
 	processDone := make(chan error, 1)
 
 	go func() {
+		<-readersDone
 		processDone <- command.Wait()
 	}()
 
